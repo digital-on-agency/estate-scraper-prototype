@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import PropTypes, { object } from "prop-types";
 import { SearchTypeOption, WhyOptions, STEP_TITLE } from "../lib/constants";
 import { DoubleSlider, AutocompleteSearchBar, MultilineTextField, BackButton, ProceedButton } from "./UiComponents";
@@ -450,7 +450,7 @@ export function CitySection({ filter, setFilter }) {
  */
 export function WhySection({ filter, setFilter }) {
 
-    const whyOptions = []
+    // const whyOptions = []
     return (
         <div className="w-full h-full grid grid-rows-8">
             {/* capital gain or abitative ? */}
@@ -488,7 +488,9 @@ export function WhySection({ filter, setFilter }) {
                 <MultilineTextField
                     id="description-input-multiline"
                     label="(Opzionale)"
-                    defaultValue=""
+                    // defaultValue=""
+                    value={filter?.request_description ?? ""}
+                    onChange={(e) => setFilter(prev => ({...prev, request_description: e.target.value}))} 
                 />
             </div>
 
@@ -496,6 +498,7 @@ export function WhySection({ filter, setFilter }) {
     );
 }
 
+// TODO: JSDoc
 export function ErrorSection({ message }) {
     return (
         <div className="bg-white w-5/6 h-3/4 border-3 border-gray-200 rounded-xl p-8 space-y-8 flex flex-col items-center">
@@ -513,21 +516,26 @@ export function ErrorSection({ message }) {
 
 // TODO: jsdoc
 export function SectionContainer({ step = 0, setStep, itemClassName = "", filter, setFilter }) {
-    const [sectionError, setSectionError] = useState(null)
-    const [pageError, setPageError] = useState("Si è verificato un errore generico, riprova più tardi o contatta il supporto")
+    const [sectionError, setSectionError] = useState(null);
+    // TODO: updating error components with this usestate crate an issue (unknown)
+    const [pageError, setPageError] = useState(null);//"Si è verificato un errore generico, riprova più tardi o contatta il supporto")
 
-    // TODO: jsdoc
-    function SelectSection() {
+    const sectionEl = React.useMemo(() => {
         switch (step) {
-            case 0: return <FilterSection filter={filter} setFilter={setFilter} />
-            case 1: return <CitySection filter={filter} setFilter={setFilter} />
-            case 2: return <WhySection filter={filter} setFilter={setFilter} />
-            default: // TODO: handle error
+          case 0: return <FilterSection filter={filter} setFilter={setFilter} />;
+          case 1: return <CitySection   filter={filter} setFilter={setFilter} />;
+          case 2: return <WhySection    filter={filter} setFilter={setFilter} />;
+          default:
+            console.error("[Wizard] Invalid step:", step);
+            return <p className="text-red-600">Errore tecnico: step non valido.</p>;
         }
-    }
+      }, [step, filter, setFilter]); // ricrea l'elemento, ma se il tipo resta lo stesso (es. WhySection) NON viene smontato
+    
 
     // TODO: JSDoc
     const buttonOnSubmit = () => {
+        // TODO: temp debug print
+        console.log("button clicked");
         if (step == 0) {
             setStep(step + 1)
             // TODO: temp debug print
@@ -548,6 +556,9 @@ export function SectionContainer({ step = 0, setStep, itemClassName = "", filter
             }
         } else if (step == 2) {
             // TODO: final submit -> start search with parameters
+            // TODO: temp debug print
+            console.log("SUBMITTED FILTER (2-final):")
+            console.log(filter)
         } else {
             // TODO: handle errors
         }
@@ -563,10 +574,7 @@ export function SectionContainer({ step = 0, setStep, itemClassName = "", filter
         }
     }
 
-    // TODO: temp debug print
-    console.log("pageError: " + pageError);
-
-    if (pageError != null && pageError != "") {
+    if (pageError != null) {
         return (
             <ErrorSection message={pageError} />
         );
@@ -575,7 +583,8 @@ export function SectionContainer({ step = 0, setStep, itemClassName = "", filter
     return (
         <div className="bg-white w-5/6 h-3/4 border-3 border-gray-200 rounded-xl p-8 space-y-8 flex flex-col items-center">
             <SearchSectionTitle step={step} className="text-3xl font-semibold tracking-tight text-caput-mortuum" />
-            <SelectSection />
+            {/* <SelectSection /> */}
+            {sectionEl}
             <div className="w-full flex justify-center text-red-500 h-[50px]">
                 {sectionError ?
                     <p className="">{sectionError}</p>

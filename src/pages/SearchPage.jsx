@@ -77,7 +77,7 @@ const BASEFILTER = {
     "lower_rooms" : null,
     "higher_rooms" : null,
     "why" : 0, // 0 for capital gain and 1 for the first house
-    "request_description" : null
+    "request_description" : ""
 }
 
 

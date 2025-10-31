@@ -434,7 +434,9 @@ export function MultilineTextField ({
     id="outlined-multiline-static",
     label="Multiline",
     defaultValue="Default Value",
-    itemClassName="w-full"
+    value="",
+    itemClassName="",
+    onChange=()=>{}
 }) {
     return (
         <TextField
@@ -442,8 +444,11 @@ export function MultilineTextField ({
           label={label}
           multiline
           rows={4}
-          defaultValue={defaultValue}
+        //   defaultValue={defaultValue}
+          value={value}
           className={itemClassName}
+          onChange={onChange}
+          fullWidth
         />
     );
 }
@@ -539,14 +544,14 @@ export function ProceedButton({
 
     const SubmitButton = () => {
         return (
-            <button className={itemClassName}>
+            <button 
+            className={itemClassName}
+            onClick={onSubmit}
+            >
                 Cerca
             </button>
         );
     }
-
-    // TODO: temp debug print
-    console.log(`PROCEED BUTTON:\n\tstep: ${step}`);
 
     if (step == 0) {
         return <FirstButton />
