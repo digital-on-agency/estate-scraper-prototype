@@ -1,8 +1,22 @@
-import React, { useState, useMemo } from "react";
-import PropTypes, { object } from "prop-types";
-import { SearchTypeOption, WhyOptions, STEP_TITLE } from "../lib/constants";
-import { DoubleSlider, AutocompleteSearchBar, MultilineTextField, BackButton, ProceedButton } from "./UiComponents";
-import { Euro, RulerDimensionLine, BedDouble, CircleX } from "lucide-react";
+import React, { useState } from "react";
+import PropTypes from "prop-types";
+import {
+    SearchTypeOption,
+    WhyOptions,
+    STEP_TITLE
+} from "../lib/constants";
+import {
+    DoubleSlider,
+    AutocompleteSearchBar,
+    MultilineTextField,
+    BackButton, ProceedButton
+} from "./UiComponents";
+import {
+    Euro,
+    RulerDimensionLine,
+    BedDouble,
+    CircleX
+} from "lucide-react";
 import comuni from "../data/comuni";
 
 
@@ -391,9 +405,9 @@ export function CitySection({ filter, setFilter }) {
  * React functional component representing the **third step** of the property search wizard:  
  * *“Perché lo stai cercando?”*.  
  * 
- * This section collects contextual information about the **purpose of the search**
- * (e.g. *abitativo*, *investimento*, *capital gain*, etc.) and optionally allows
- * the user to write a short free-text description of additional needs.
+ * This section collects contextual information about the **purpose of the property search**
+ * (e.g., *investimento* or *prima casa*) and allows the user to optionally add a custom description
+ * of specific needs or additional requirements.
  * 
  * ---
  * 
@@ -401,8 +415,8 @@ export function CitySection({ filter, setFilter }) {
  * 
  * | Subsection | Description |
  * |-------------|-------------|
- * | **Motivation Selector** | A horizontal list of options (`WhyOptions`) that let the user choose the reason for the purchase/search. Each option updates `filter.why`. |
- * | **Optional Description** | A multiline text field (`MultilineTextField`) where the user can specify extra details or requirements. |
+ * | **Motivation Selector** | A horizontal list of motivation options (`WhyOptions`), each clickable. Selecting one updates `filter.why`. |
+ * | **Optional Description** | A multiline input field (`MultilineTextField`) where the user can write a free-text note stored in `filter.request_description`. |
  * 
  * ---
  * 
@@ -412,21 +426,22 @@ export function CitySection({ filter, setFilter }) {
  * Component props.
  * 
  * @param {Filter} props.filter  
- * The current filter object containing the user’s selections.  
- * Used here to read and display the active “why” value.
+ * The current search filter object.  
+ * Used to determine the active `why` selection and the content of the optional description field.
  * 
  * @param {Function} props.setFilter  
- * React state setter that updates the `filter` state.  
- * Called whenever the user selects a new motivation or writes an additional description.  
+ * State setter function to update the `filter` object.  
+ * Called whenever the user selects a motivation or edits the text description.  
  * Example:
  * ```js
  * setFilter(prev => ({ ...prev, why: opt.value }));
+ * setFilter(prev => ({ ...prev, request_description: e.target.value }));
  * ```
  * 
  * @returns {JSX.Element}  
- * A grid layout divided into two main rows:
- * - The top 3/8 rows contain the selectable motivation buttons.  
- * - The bottom 5/8 rows contain the optional multiline text input.
+ * A vertically divided section with:
+ * - a **motivation selector** (top 3/8 rows), and  
+ * - an **optional multiline description** (bottom 5/8 rows).
  * 
  * ---
  * 
@@ -441,16 +456,15 @@ export function CitySection({ filter, setFilter }) {
  * ---
  * 
  * @usage
- * Typically used as **step 2 → “Perché lo stai cercando?”** in the search wizard flow,
- * following the location selection (`AutocompleteSearchBar`).
+ * - Typically used as **step 2 → “Perché lo stai cercando?”** in the property search wizard.  
+ * - Complements previous steps (“Cosa stai cercando?” and “Dove lo stai cercando?”).  
+ * - Stores user motivation in `filter.why` and optional notes in `filter.request_description`.
  * 
  * @accessibility
- * - Each motivation is both clickable and selectable via keyboard focus.  
- * - The text field includes a visible label and hint for clarity.
+ * - Each option can be selected via both button click and keyboard focus.  
+ * - The multiline input includes a descriptive label and placeholder for clarity.
  */
 export function WhySection({ filter, setFilter }) {
-
-    // const whyOptions = []
     return (
         <div className="w-full h-full grid grid-rows-8">
             {/* capital gain or abitative ? */}
@@ -488,9 +502,8 @@ export function WhySection({ filter, setFilter }) {
                 <MultilineTextField
                     id="description-input-multiline"
                     label="(Opzionale)"
-                    // defaultValue=""
                     value={filter?.request_description ?? ""}
-                    onChange={(e) => setFilter(prev => ({...prev, request_description: e.target.value}))} 
+                    onChange={(e) => setFilter(prev => ({ ...prev, request_description: e.target.value }))}
                 />
             </div>
 
@@ -498,17 +511,65 @@ export function WhySection({ filter, setFilter }) {
     );
 }
 
-// TODO: JSDoc
+/**
+ * **ErrorSection**
+ * 
+ * React functional component that renders a **user-friendly error message screen**  
+ * when an unexpected issue occurs within the application or wizard interface.  
+ * 
+ * The layout centers a red error icon, a title (“Si è verificato un errore”),  
+ * and a customizable message passed through the `message` prop.
+ * 
+ * It is designed to replace or overlay the current view, maintaining consistent styling
+ * with other wizard sections.
+ * 
+ * ---
+ * 
+ * @component
+ * 
+ * @param {Object} props  
+ * Component props.
+ * 
+ * @param {string} props.message  
+ * Text describing the specific error or context.  
+ * Displayed below the main error title to give more clarity to the user.  
+ * Example: `"Impossibile caricare i risultati di ricerca."`
+ * 
+ * @returns {JSX.Element}  
+ * A centered, styled container showing an error icon, title, and descriptive message.
+ * 
+ * ---
+ * 
+ * @example
+ * ```jsx
+ * <ErrorSection message="Connessione al server non riuscita. Riprova più tardi." />
+ * ```
+ * 
+ * ---
+ * 
+ * @usage
+ * - Serves as the **error fallback view** in the property search wizard or related UI components.  
+ * - Can be displayed when API requests fail, when filters return no results,  
+ *   or when an unexpected rendering error occurs.  
+ * - The `message` prop can contain either a user-facing explanation or a technical summary.
+ * 
+ * @accessibility
+ * - Uses large red icon (`CircleX`) and bold text for high visibility.  
+ * - The message is read naturally by screen readers as part of the content flow.
+ */
 export function ErrorSection({ message }) {
     return (
-        <div className="bg-white w-5/6 h-3/4 border-3 border-gray-200 rounded-xl p-8 space-y-8 flex flex-col items-center">
-            <CircleX className="size-24 text-red-700" />
-            <h1 className="text-3xl font-semibold tracking-tight text-red-700">
-                Si è verificato un errore
-            </h1>
-            <ErrorSection message={message} />
-            <div className="w-full h-full">
+        <div className="bg-white w-5/6 h-3/4 border-3 border-gray-200 rounded-xl p-8 space-y-8 flex justify-center items-center">
+            <div className="flex flex-col h-fit items-center">
+                <CircleX className="size-24 text-red-700" />
+                <h1 className="text-3xl font-semibold tracking-tight text-red-700 mb-8">
+                    Si è verificato un errore
+                </h1>
+                <p>{message}</p>
+                {/* <ErrorSection message={message} /> */}
+                <div className="w-full h-full">
 
+                </div>
             </div>
         </div>
     );
@@ -517,42 +578,30 @@ export function ErrorSection({ message }) {
 // TODO: jsdoc
 export function SectionContainer({ step = 0, setStep, itemClassName = "", filter, setFilter }) {
     const [sectionError, setSectionError] = useState(null);
-    // TODO: updating error components with this usestate crate an issue (unknown)
     const [pageError, setPageError] = useState(null);//"Si è verificato un errore generico, riprova più tardi o contatta il supporto")
 
     const sectionEl = React.useMemo(() => {
         switch (step) {
-          case 0: return <FilterSection filter={filter} setFilter={setFilter} />;
-          case 1: return <CitySection   filter={filter} setFilter={setFilter} />;
-          case 2: return <WhySection    filter={filter} setFilter={setFilter} />;
-          default:
-            console.error("[Wizard] Invalid step:", step);
-            return <p className="text-red-600">Errore tecnico: step non valido.</p>;
+            case 0: return <FilterSection filter={filter} setFilter={setFilter} />;
+            case 1: return <CitySection filter={filter} setFilter={setFilter} />;
+            case 2: return <WhySection filter={filter} setFilter={setFilter} />;
+            default:
+                console.error("[Wizard] Invalid step:", step);
+                return <p className="text-red-600">Errore tecnico: step non valido.</p>;
         }
-      }, [step, filter, setFilter]); // ricrea l'elemento, ma se il tipo resta lo stesso (es. WhySection) NON viene smontato
-    
+    }, [step, filter, setFilter]); // ricrea l'elemento, ma se il tipo resta lo stesso (es. WhySection) NON viene smontato
+
 
     // TODO: JSDoc
     const buttonOnSubmit = () => {
-        // TODO: temp debug print
-        console.log("button clicked");
         if (step == 0) {
             setStep(step + 1)
-            // TODO: temp debug print
-            console.log("SUBMITTED FILTER (0):")
-            console.log(filter)
         } else if (step == 1) {
             if (!filter["city"] || filter["city"] == null || filter["city"] == "") {
-                // TODO: handle error
                 setSectionError("Inserire un comune valido per andare avanti")
-                // TODO: temp debug print
-                console.log("ERROR: filter['city'] cannot be empty or null");
             } else {
                 setSectionError(null)
                 setStep(step + 1)
-                // TODO: temp debug print
-                console.log("SUBMITTED FILTER (1):")
-                console.log(filter)
             }
         } else if (step == 2) {
             // TODO: final submit -> start search with parameters
@@ -560,17 +609,66 @@ export function SectionContainer({ step = 0, setStep, itemClassName = "", filter
             console.log("SUBMITTED FILTER (2-final):")
             console.log(filter)
         } else {
-            // TODO: handle errors
+            setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
+            console.error("ERROR: the value of `step` is not allowed (must be 0, 1, or 2) - `step`: " + step)
         }
     }
 
-    // TODO: JSDoc
+    /**
+     * **buttonBackClick**
+     * 
+     * Event handler that manages the **backward navigation** in the property search wizard.  
+     * 
+     * It resets any existing section-level error state (`setSectionError(null)`)  
+     * and decrements the current `step` value when possible.  
+     * 
+     * If the current step is invalid (not `1` or `2`), the function logs a detailed error message  
+     * and sets a generic fallback error for user feedback.
+     * 
+     * ---
+     * 
+     * @function buttonBackClick
+     * 
+     * @returns {void}  
+     * No return value. Updates component state through side effects (`setSectionError`, `setStep`, `setError`).
+     * 
+     * ---
+     * 
+     * ### 🧠 Behavior Summary
+     * | Condition | Action |
+     * |------------|--------|
+     * | `step === 1` or `step === 2` | Decrements the step (`setStep(step - 1)`). |
+     * | Otherwise | Logs an error and sets a generic fallback error message. |
+     * 
+     * ---
+     * 
+     * @example
+     * ```js
+     * const buttonBackClick = () => {
+     *   setSectionError(null);
+     *   if (step === 1 || step === 2) {
+     *     setStep(step - 1);
+     *   } else {
+     *     setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
+     *     console.error("ERROR: the value of `step` is not allowed (must be 1 or 2) - step:", step);
+     *   }
+     * };
+     * ```
+     * 
+     * ---
+     * 
+     * @usage
+     * - Used as the `onClickFunction` handler for the **BackButton** component.  
+     * - Ensures safe step navigation and proper error recovery between wizard sections.  
+     * - Typically invoked when the user clicks “Indietro”.
+     */
     const buttonBackClick = () => {
         setSectionError(null)
         if (step == 1 || step == 2) {
             setStep(step - 1)
         } else {
-            // TODO: handle error cases
+            setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
+            console.error("ERROR: the value of `step` is not allowed (must be 1 or 2) - `step`: " + step)
         }
     }
 

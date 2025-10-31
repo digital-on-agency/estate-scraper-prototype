@@ -1,6 +1,5 @@
-import { Section } from "lucide-react";
 import React, { useState } from "react";
-import { SearchSectionTitle, SectionContainer } from "../components/SearchComponents";
+// import { SectionContainer } from "../components/SearchComponents";
 
 /**
  * **BASEFILTER**
@@ -68,16 +67,16 @@ import { SearchSectionTitle, SectionContainer } from "../components/SearchCompon
  * ```
  */
 const BASEFILTER = {
-    "city" : "",
-    "type" : null,
-    "lower_price" : null,
-    "higher_price" : null,
-    "lower_mq" : null,
-    "higher_mq" : null,
-    "lower_rooms" : null,
-    "higher_rooms" : null,
-    "why" : 0, // 0 for capital gain and 1 for the first house
-    "request_description" : ""
+    "city": "",
+    "type": null,
+    "lower_price": null,
+    "higher_price": null,
+    "lower_mq": null,
+    "higher_mq": null,
+    "lower_rooms": null,
+    "higher_rooms": null,
+    "why": 0, // 0 for capital gain and 1 for the first house
+    "request_description": ""
 }
 
 
@@ -188,9 +187,9 @@ export default function SearchPage() {
      */
     const [step, setStep] = useState(0);
 
-    return(
+    return (
         <div className="w-screen h-full flex items-center justify-center bg-gray-100">
-            <SectionContainer step={step} setStep={setStep} itemClassName="text-black" filter={filter} setFilter={setFilter}/>
+            <SectionContainer step={step} setStep={setStep} itemClassName="text-black" filter={filter} setFilter={setFilter} />
         </div>
     );
 }

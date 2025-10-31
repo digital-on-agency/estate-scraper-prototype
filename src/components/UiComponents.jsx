@@ -34,7 +34,7 @@ import { Autocomplete, TextField } from "@mui/material";
  * Used internally by `cityFilter` to compare user input and city labels consistently.
  */
 const normalize = (s = "") =>
-  s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
+    s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 
 /**
  * **cityFilter**
@@ -86,24 +86,24 @@ const normalize = (s = "") =>
  * ```
  */
 const cityFilter = (options, { inputValue }) => {
-  const q = normalize(inputValue);
-  if (!q) return options;
+    const q = normalize(inputValue);
+    if (!q) return options;
 
-  return options
-    .map((label) => {
-      const n = normalize(label);
-      let score = 0;
-      if (n === q) score = 1000;
-      else if (n.startsWith(q)) score = 800 - label.length;
-      else {
-        const idx = n.indexOf(q);
-        if (idx >= 0) score = 600 - idx - label.length * 0.01;
-      }
-      return { label, score };
-    })
-    .filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map(x => x.label);
+    return options
+        .map((label) => {
+            const n = normalize(label);
+            let score = 0;
+            if (n === q) score = 1000;
+            else if (n.startsWith(q)) score = 800 - label.length;
+            else {
+                const idx = n.indexOf(q);
+                if (idx >= 0) score = 600 - idx - label.length * 0.01;
+            }
+            return { label, score };
+        })
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(x => x.label);
 };
 
 /**
@@ -185,33 +185,33 @@ const cityFilter = (options, { inputValue }) => {
  * - `autoHighlight` and `selectOnFocus` improve UX consistency.
  */
 export function AutocompleteSearchBar({ value = null, setValue, options, label = "" }) {
-  // text shown in the input
-  const [inputValue, setInputValue] = useState(value ?? "");
+    // text shown in the input
+    const [inputValue, setInputValue] = useState(value ?? "");
 
-  // if the parent changes `value`, update the visible text
-  useEffect(() => {
-    setInputValue(value ?? "");
-  }, [value]);
+    // if the parent changes `value`, update the visible text
+    useEffect(() => {
+        setInputValue(value ?? "");
+    }, [value]);
 
-  return (
-    <Autocomplete
-      className="w-full"
-      options={options}                 // array of strings
-      filterOptions={cityFilter}
-      value={value}                     // selected string (or null)
-      onChange={(_, newValue) => {
-        setValue(newValue ?? null);     // save in parent
-        setInputValue(newValue ?? "");  // fill input with selected
-      }}
-      inputValue={inputValue}           // text typed/displayed
-      onInputChange={(_, newInput) => setInputValue(newInput)}
-      // optional, improve UX
-      autoHighlight
-      selectOnFocus
-      handleHomeEndKeys
-      renderInput={(params) => <TextField {...params} label={label} />}
-    />
-  );
+    return (
+        <Autocomplete
+            className="w-full"
+            options={options}                 // array of strings
+            filterOptions={cityFilter}
+            value={value}                     // selected string (or null)
+            onChange={(_, newValue) => {
+                setValue(newValue ?? null);     // save in parent
+                setInputValue(newValue ?? "");  // fill input with selected
+            }}
+            inputValue={inputValue}           // text typed/displayed
+            onInputChange={(_, newInput) => setInputValue(newInput)}
+            // optional, improve UX
+            autoHighlight
+            selectOnFocus
+            handleHomeEndKeys
+            renderInput={(params) => <TextField {...params} label={label} />}
+        />
+    );
 }
 
 /**
@@ -430,25 +430,25 @@ export function DoubleSlider({
  * - Fully compatible with MUI form systems; can be wrapped in `<form>` or controlled manually.  
  * - Modify `rows` or `multiline` behavior directly in the JSX if needed.
  */
-export function MultilineTextField ({
-    id="outlined-multiline-static",
-    label="Multiline",
-    defaultValue="Default Value",
-    value="",
-    itemClassName="",
-    onChange=()=>{}
+export function MultilineTextField({
+    id = "outlined-multiline-static",
+    label = "Multiline",
+    defaultValue = "Default Value",
+    value = "",
+    itemClassName = "",
+    onChange = () => { }
 }) {
     return (
         <TextField
-          id={id}
-          label={label}
-          multiline
-          rows={4}
-        //   defaultValue={defaultValue}
-          value={value}
-          className={itemClassName}
-          onChange={onChange}
-          fullWidth
+            id={id}
+            label={label}
+            multiline
+            rows={4}
+            //   defaultValue={defaultValue}
+            value={value}
+            className={itemClassName}
+            onChange={onChange}
+            fullWidth
         />
     );
 }
@@ -509,7 +509,12 @@ export function MultilineTextField ({
  * - Commonly paired with a “Next” or “Continue” button.  
  * - Hidden automatically in the first step to simplify UX.
  */
-export function BackButton({ step, onClickFunction, itemClassName = "bg-gray-300 hover:bg-gray-400/70 px-10 py-4 text-2xl text-cinnabar font-semibold rounded-xl" }) {
+export function BackButton({
+    step,
+    onClickFunction,
+    itemClassName = "bg-gray-300 hover:bg-gray-400/70 px-10 py-4 text-2xl text-cinnabar font-semibold rounded-xl",
+    setError = (msg) => { console.error("Error: " + msg) }
+}) {
     if (step == 0) {
         return (<></>)
     }
@@ -524,12 +529,80 @@ export function BackButton({ step, onClickFunction, itemClassName = "bg-gray-300
     );
 }
 
-// TODO: jsdoc
+/**
+ * **ProceedButton**
+ * 
+ * React functional component that renders the **forward navigation button**
+ * for the multi-step property search wizard.  
+ * 
+ * The button text and behavior vary dynamically based on the current `step` value:
+ * 
+ * | Step | Label | Action |
+ * |------|--------|--------|
+ * | **0** | “Avanti” | Proceeds from the “Cosa stai cercando?” step. |
+ * | **1** | “Avanti” | Proceeds from the “Dove lo stai cercando?” step. |
+ * | **2** | “Cerca” | Final step — triggers the search or form submission. |
+ * 
+ * Any invalid `step` value (not `0`, `1`, or `2`) logs an error and sets a generic fallback message.
+ * 
+ * ---
+ * 
+ * @component
+ * 
+ * @param {Object} props  
+ * Component props.
+ * 
+ * @param {number} props.step  
+ * The current wizard step index.  
+ * Accepts values `0`, `1`, or `2`.  
+ * Determines which button is rendered and what label it displays.
+ * 
+ * @param {Function} props.onSubmit  
+ * Callback executed when the button is clicked.  
+ * Typically advances to the next step or executes the search action at the final step.  
+ * Example:
+ * ```js
+ * const handleProceed = () => setStep(prev => prev + 1);
+ * ```
+ * 
+ * @param {string} [props.itemClassName="bg-cinnabar hover:bg-cinnabar/70 px-10 py-4 text-2xl text-white rounded-xl"]  
+ * CSS class string applied to the button.  
+ * Provides default styling (red background, white text, rounded corners).  
+ * Can be overridden to customize button appearance.
+ * 
+ * @returns {JSX.Element|void}  
+ * Returns:
+ * - A `<button>` labeled “Avanti” or “Cerca”, depending on the step; or  
+ * - Nothing (logs an error) if `step` has an invalid value.
+ * 
+ * ---
+ * 
+ * @example
+ * ```jsx
+ * <ProceedButton
+ *   step={currentStep}
+ *   onSubmit={() => {
+ *     if (currentStep < 2) setStep(prev => prev + 1);
+ *     else handleSearch();
+ *   }}
+ * />
+ * ```
+ * 
+ * ---
+ * 
+ * @usage
+ * - Used at the bottom of each wizard step to advance or trigger the search process.  
+ * - Complements the `BackButton` for bidirectional navigation.  
+ * - The label changes automatically to “Cerca” on the final step to signal submission.
+ * 
+ * @accessibility
+ * - Uses a semantic `<button>` element.  
+ * - Supports keyboard focus and activation via Enter/Space.
+ */
 export function ProceedButton({
     step,
     onSubmit,
     itemClassName = "bg-cinnabar hover:bg-cinnabar/70 px-10 py-4 text-2xl text-white rounded-xl",
-    checkCliccable = () => true
 }) {
     const FirstButton = () => {
         return (
@@ -544,9 +617,9 @@ export function ProceedButton({
 
     const SubmitButton = () => {
         return (
-            <button 
-            className={itemClassName}
-            onClick={onSubmit}
+            <button
+                className={itemClassName}
+                onClick={onSubmit}
             >
                 Cerca
             </button>
@@ -560,6 +633,7 @@ export function ProceedButton({
     } else if (step == 2) {
         return <SubmitButton />
     } else {
-        // TODO: handle error (step not in [0, 1, 2])
+        setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
+        console.error("ERROR: the value of `step` is not allowed (must be 0, 1, or 2) - `step`: " + step)
     }
 }
