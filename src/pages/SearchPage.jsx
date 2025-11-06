@@ -19,6 +19,7 @@ import {
     CircleX
 } from "lucide-react";
 import comuni from "../data/comuni";
+import { scrape } from "../lib/api";
 
 /**
  * **BASEFILTER**
@@ -96,6 +97,28 @@ const BASEFILTER = {
     "higher_rooms": null,
     "why": 0, // 0 for capital gain and 1 for the first house
     "request_description": ""
+}
+
+async function tempScrape(filter, setError) {
+    // TODO: temp debug print
+    console.log("TEMP SCRAPE:")
+    console.log(filter)
+
+    const res = await scrape(filter)
+    console.log("TEMP SCRAPE RESULT:")
+    console.log(res)
+
+    // TODO: handle varius error cases 
+    setError({
+        title: "Errore nella ricerca",
+        paragraph: "Si è verificato un errore nella ricerca, riprova più tardi o contatta il supporto",
+        buttonText: "Torna alla ricerca",
+        buttonLink: "/search",
+        mainColor: "red-600",
+        onClick: () => {setError(null)}
+    })
+
+    
 }
 
 
@@ -346,7 +369,6 @@ export function FilterSection({ filter, setFilter }) {
         </div>
     );
 }
-
 
 /**
  * **CitySection**
@@ -688,6 +710,7 @@ export function SectionContainer({ step = 0, setStep, itemClassName = "", filter
             // TODO: temp debug print
             console.log("SUBMITTED FILTER (2-final):")
             console.log(filter)
+            tempScrape(filter)
         } else {
             setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
             console.error("ERROR: the value of `step` is not allowed (must be 0, 1, or 2) - `step`: " + step)
