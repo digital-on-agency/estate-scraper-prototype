@@ -135,10 +135,6 @@ export async function scrape(payload) {
     120000 // un po’ più alto per cold start Render
   );
 
-  // TODO: temp debug print
-  console.log("temp scrape api call result:")
-  console.log(res)
-
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(`API ${res.status}: ${detail || res.statusText}`);

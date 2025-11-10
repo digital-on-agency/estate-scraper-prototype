@@ -10,7 +10,8 @@ import {
     AutocompleteSearchBar,
     MultilineTextField,
     BackButton,
-    ProceedButton
+    ProceedButton,
+    DoubleSelector
 } from "../components/UiComponents";
 import {
     Euro,
@@ -99,7 +100,82 @@ const BASEFILTER = {
     "request_description": ""
 }
 
-// TODO: clean styling
+/**
+ * **tempScrape**
+ *
+ * Asynchronous helper function that performs a **temporary test call** to the `scrape` API  
+ * and handles both **loading state management** and **error normalization** for user feedback.  
+ * 
+ * It measures the total execution time using `performance.now()` and logs diagnostics for debugging.  
+ * On success, it returns the raw API result; on failure, it sets a formatted error object via `setError`
+ * and returns `null`.
+ *
+ * ---
+ *
+ * @async
+ * @function tempScrape
+ *
+ * @param {Filter} filter  
+ * The search filter object sent to the scraping API.  
+ * Must include properties such as `city`, `type`, `lower_price`, `higher_mq`, etc.
+ *
+ * @param {Function} [setError=() => { console.error("[TEMPSCRAPE]: setError non è definita") }]  
+ * Callback function used to report user-facing errors.  
+ * Called with an **error object** containing fields like:
+ * ```js
+ * {
+ *   title: "Errore nella ricerca",
+ *   paragraph: "Si è verificato un problema imprevisto. Riprova più tardi.",
+ *   buttonText: "Torna alla ricerca",
+ *   buttonLink: "/search",
+ *   mainColor: "red-600",
+ *   onClick: () => setError(null)
+ * }
+ * ```
+ *
+ * @param {Function} [setLoading=() => { console.error("[TEMPSCRAPE]: setLoading non è definita") }]  
+ * Callback function used to toggle loading indicators in the UI.  
+ * Automatically set to `true` at the start of the operation and reset to `false`
+ * when the process completes or fails.
+ *
+ * @returns {Promise<Object|null>}  
+ * Resolves with the JSON result returned from `scrape(filter)` on success,  
+ * or `null` if an error occurs.
+ *
+ * ---
+ *
+ * @throws {Error}  
+ * Catches all thrown exceptions internally and never rethrows.  
+ * The caught error is logged to the console and surfaced via `setError`.
+ *
+ * ---
+ *
+ * @example
+ * ```js
+ * try {
+ *   const result = await tempScrape(filter, setError, setLoading);
+ *   if (result) {
+ *     setResults(result.results);
+ *   }
+ * } catch {
+ *   // No rethrow — handled inside tempScrape
+ * }
+ * ```
+ *
+ * ---
+ *
+ * @usage
+ * - Used in the final step of the search wizard (`SectionContainer`) to trigger scraping requests.  
+ * - Provides robust error handling, including specific messages for:
+ *   - **Timeouts** (`AbortError`) → “The request took too long.”  
+ *   - **API errors** (`API 500: …`) → “The server responded with an error.”  
+ *   - **Unexpected failures** → generic fallback message.  
+ * - Returns `null` on failure so the caller can safely skip result updates.
+ *
+ * @notes
+ * - Uses `withTimeout` inside the `scrape` function to enforce request duration limits.  
+ * - Intended for temporary testing and debugging; may be replaced with production-safe request logic later.
+ */
 async function tempScrape(
     filter,
     setError = () => { console.error("[TEMPSCRAPE]: setError non è definita") },
@@ -110,15 +186,14 @@ async function tempScrape(
 
     try {
         setLoading(true)
-        // Log non invasivo per debugging locale
-        console.log("[tempScrape] payload:", filter)
 
         const result = await scrape(filter);
+        // TODO: temp debug print
         console.log("[tempScrape] risultato:", result)
 
         setLoading(false);
-        // Prima di restituire il risultato, calcoliamo il tempo totale
         const endTime = performance.now();
+        // TODO: temp debug print
         console.log(`[tempScrape] Tempo impiegato: ${((endTime - startTime) / 1000).toFixed(2)} secondi`);
 
         return result
@@ -154,13 +229,11 @@ async function tempScrape(
     }
 }
 
-// TODO: clean styling
 SearchSectionTitle.propTypes = {
     step: PropTypes.number.isRequired,
     className: PropTypes.string,
 };
 
-// TODO: clean styling
 /**
  * **SearchSectionTitle**
  * 
@@ -219,7 +292,7 @@ SearchSectionTitle.propTypes = {
  * <SearchSectionTitle step={1} className="text-4xl text-cinnabar" />;
  * ```
  */
-export function SearchSectionTitle({ step, className = "text-3xl font-semibold tracking-tight" }) {
+export function SearchSectionTitle({ step, className = "h2-title" }) {
     // safe fallback if step is out of range
     const title = STEP_TITLE[step] ?? STEP_TITLE[0];
 
@@ -548,7 +621,6 @@ export function CitySection({ filter, setFilter }) {
     );
 }
 
-// TODO: clean styling
 /**
  * **WhySection**
  * 
@@ -615,37 +687,30 @@ export function CitySection({ filter, setFilter }) {
  * - The multiline input includes a descriptive label and placeholder for clarity.
  */
 export function WhySection({ filter, setFilter }) {
+    const [category, setCategory] = useState("");
+    const [item, setItem] = useState("")
+
     return (
         <div className="why-section-container">
-            {/* capital gain or abitative ? */}
-            <ul className="reason-list-container">
-                {WhyOptions.map((opt) => (
-                    <li key={String(opt.value)} className="reason-list-item">
-                        <div
-                            onClick={() =>
-                                setFilter((prev) => ({ ...prev, why: opt.value }))
-                            }
-                            className={`circle-selector-empty ${filter?.why == opt.value ? 'bg-secondary' : ''}`}
-                        />
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setFilter((prev) => ({ ...prev, why: opt.value }))
-                            }
-                            className={`circle-selector-option ${filter?.why === opt.value
-                                ? "font-semibold text-primary"
-                                : ""
-                                }`}
-                        >
-                            {opt.label}
-                        </button>
-                    </li>
-                ))}
-            </ul>
+            <DoubleSelector
+                containerClassName="w-full flex flex-row justify-between gap-10"
+                categoryLabel="Categoria"
+                categoryValue={category}
+                categoryItems={Object.keys(WhyOptions)}
+                categoryOnChange={(event) => {
+                    setCategory(event.target.value)
+                    setItem(WhyOptions[category])
+                }}
+                itemLabel="TODO"
+                itemValue={item}
+                itemItems={category != "" ? WhyOptions[category] : null}
+                itemOnChange={(event) => setItem(event.target.value)}
+            />
+
             {/* little desciption (optional) */}
             <div className="why-description-container">
                 <h2 className="h4-title" >Manca qualcosa?</h2>
-                <p className="text-sm text-gray-500 mb-2"
+                <p className="description-paragraph mb-2"
                 >Se c'è qualche caratteristicha importante che non è stata nominata fin'ora, scrivila qui sotto</p>
                 <MultilineTextField
                     id="description-input-multiline"
@@ -654,73 +719,10 @@ export function WhySection({ filter, setFilter }) {
                     onChange={(e) => setFilter(prev => ({ ...prev, request_description: e.target.value }))}
                 />
             </div>
-
         </div>
     );
 }
 
-// TODO: clean styling
-/**
- * **ErrorSection**
- * 
- * React functional component that renders a **user-friendly error message screen**  
- * when an unexpected issue occurs within the application or wizard interface.  
- * 
- * The layout centers a red error icon, a title (“Si è verificato un errore”),  
- * and a customizable message passed through the `message` prop.
- * 
- * It is designed to replace or overlay the current view, maintaining consistent styling
- * with other wizard sections.
- * 
- * ---
- * 
- * @component
- * 
- * @param {Object} props  
- * Component props.
- * 
- * @param {string} props.message  
- * Text describing the specific error or context.  
- * Displayed below the main error title to give more clarity to the user.  
- * Example: `"Impossibile caricare i risultati di ricerca."`
- * 
- * @returns {JSX.Element}  
- * A centered, styled container showing an error icon, title, and descriptive message.
- * 
- * ---
- * 
- * @example
- * ```jsx
- * <ErrorSection message="Connessione al server non riuscita. Riprova più tardi." />
- * ```
- * 
- * ---
- * 
- * @usage
- * - Serves as the **error fallback view** in the property search wizard or related UI components.  
- * - Can be displayed when API requests fail, when filters return no results,  
- *   or when an unexpected rendering error occurs.  
- * - The `message` prop can contain either a user-facing explanation or a technical summary.
- * 
- * @accessibility
- * - Uses large red icon (`CircleX`) and bold text for high visibility.  
- * - The message is read naturally by screen readers as part of the content flow.
- */
-export function ErrorSection({ message }) {
-    return (
-        <div className="section-container justify-center">
-            <CircleX className="message-section-icon" />
-            <h1 className="section-error-message mb-8">
-                Si è verificato un errore
-            </h1>
-            <p>{message}</p>
-            {/* <ErrorSection message={message} /> */}
-            {/* <div className="w-full h-full">
-                
-            </div> */}
-        </div>
-    );
-}
 
 /**
  * **SectionContainer**
@@ -978,7 +980,7 @@ export function SectionContainer({
 
     return (
         <div className="section-container">
-            <SearchSectionTitle step={step} className="section-title" />
+            <SearchSectionTitle step={step} />
             {sectionEl}
             <div className="section-error-message">
                 {sectionError ?
@@ -1170,7 +1172,7 @@ export default function SearchPage({ setError, setLoading, setResults }) {
      * {state === 2 && <PurposeStep />}
      * ```
      */
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState(2);
 
     return (
         <div className="main-container">

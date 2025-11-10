@@ -38,12 +38,16 @@
   @apply size-24 text-red-700
 }
 
-@utility section-title {
+@utility h2-title {
   @apply text-3xl font-semibold tracking-tight text-primary font-inria
 }
 
-@utility section-error-title {
+@utility h2-error-title {
   @apply text-3xl font-semibold tracking-tight text-red-700 font-inria
+}
+
+@utility h2-title {
+  @apply text-3xl font-semibold tracking-tight
 }
 
 @utility h3-title {
@@ -52,6 +56,10 @@
 
 @utility h4-title {
   @apply text-xl font-semibold tracking-tight font-inria text-primary w-3/4;
+}
+
+@utility description-paragraph {
+  @apply text-sm text-gray-500
 }
 
 @utility main-button {
