@@ -187,7 +187,9 @@ async function tempScrape(
     try {
         setLoading(true)
 
-        const result = await scrape(filter);
+        // TODO: temporary remove why value
+        const { why, ...filterWithoutWhy } = filter || {};
+        const result = await scrape(filterWithoutWhy);
         // TODO: temp debug print
         console.log("[tempScrape] risultato:", result)
 

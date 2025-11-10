@@ -126,21 +126,25 @@ function withTimeout(promise, ms = 60000) {
 export async function scrape(payload) {
   if (!API_BASE) throw new Error("VITE_API_BASE is not set");
 
-  const res = await withTimeout(
-    fetch(`${API_BASE}/scrape`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }),
-    120000 // un po’ più alto per cold start Render
-  );
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(`API ${res.status}: ${detail || res.statusText}`);
+  try {
+    const res = await withTimeout(
+      fetch(`${API_BASE}/scrape`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+      120000 // un po’ più alto per cold start Render
+    );
+  
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      throw new Error(`API ${res.status}: ${detail || res.statusText}`);
+    }
+  
+    return res.json();
+  } catch (error) {
+    throw new Error("[scrape] Error during scrape request: " + error)
   }
-
-  return res.json();
 }
 
 
