@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import {
     SearchTypeOption,
     WhyOptions,
-    STEP_TITLE
+    STEP_TITLE,
 } from "../lib/constants";
 import {
     DoubleSlider,
@@ -690,10 +690,61 @@ export function WhySection({ filter, setFilter }) {
     const [category, setCategory] = useState("");
     const [item, setItem] = useState("")
 
+    /**
+     * **itemValueToName**
+     * 
+     * Utility function that maps a given `value` to a corresponding **label** from the `WhyOptions` structure.  
+     * It searches through the `WhyOptions` object, which is structured by categories (e.g., "Investimento", "Prima Casa"),  
+     * and returns a formatted string combining the category name and option label.
+     * 
+     * If no matching value is found, it returns an empty string.
+     * 
+     * ---
+     * 
+     * @function itemValueToName
+     * 
+     * @param {number} val  
+     * The value to look up within `WhyOptions`.  
+     * Expected to be a number that matches one of the `value` properties in the options.
+     * 
+     * @returns {string}  
+     * The formatted string containing the category name and the label (e.g., `"Investimento - Prima Casa"`)  
+     * or an empty string if no match is found.
+     * 
+     * ---
+     * 
+     * @example
+     * ```js
+     * const categoryName = itemValueToName(0);
+     * console.log(categoryName); // "Investimento - Prima Casa"
+     * 
+     * const invalidCategory = itemValueToName(99);
+     * console.log(invalidCategory); // ""
+     * ```
+     * 
+     * ---
+     * 
+     * @usage
+     * - Used to map a numerical `value` to a more human-readable label for UI displays (e.g., dropdowns, tooltips).  
+     * - Helps provide contextual information based on the selected option in forms or filters.
+     * 
+     * @notes
+     * - The `WhyOptions` object is assumed to be structured by categories, where each category has an array of options.
+     */
+    const itemValueToName = (val) => {
+        for (const [cat, arr] of Object.entries(WhyOptions)) {
+            for (const opt of arr) {
+                if (opt.value === val) {
+                    return `${cat} - ${opt.label}`;
+                }
+            }
+        }
+        return "";
+    }
+
     return (
         <div className="why-section-container">
             <DoubleSelector
-                containerClassName="w-full flex flex-row justify-between gap-10"
                 categoryLabel="Categoria"
                 categoryValue={category}
                 categoryItems={Object.keys(WhyOptions)}
@@ -701,17 +752,27 @@ export function WhySection({ filter, setFilter }) {
                     setCategory(event.target.value)
                     setItem(WhyOptions[category])
                 }}
-                itemLabel="TODO"
+                itemLabel="Scegli il motivo"
                 itemValue={item}
                 itemItems={category != "" ? WhyOptions[category] : null}
-                itemOnChange={(event) => setItem(event.target.value)}
+                itemOnChange={(event) => {
+                    const selectedItem = event.target.value;
+                    setItem(selectedItem); // Imposta l'item selezionato
+
+                    // Aggiorna solo il campo 'why' senza modificare il resto di filter
+                    setFilter((prev) => ({
+                        ...prev,
+                        why: `${itemValueToName(event.target.value)}`, // Modifica solo il campo 'why'
+                    }));
+                }}
             />
 
             {/* little desciption (optional) */}
             <div className="why-description-container">
                 <h2 className="h4-title" >Manca qualcosa?</h2>
-                <p className="description-paragraph mb-2"
-                >Se c'è qualche caratteristicha importante che non è stata nominata fin'ora, scrivila qui sotto</p>
+                <p className="description-paragraph mb-2">
+                    Se c'è qualche caratteristicha importante che non è stata nominata fin'ora, scrivila qui sotto
+                </p>
                 <MultilineTextField
                     id="description-input-multiline"
                     label="(Opzionale)"
@@ -902,7 +963,14 @@ export function SectionContainer({
             }
         } else if (step == 2) {     // Last step (why), send request to the scraper via api (Render.com)
             try {
+                // TODO: temp debug print
+                console.log("filter sended in req:");
+                console.log(filter);
                 const res = await tempScrape(filter, setError, setLoading)
+
+                // TODO: temp debug print
+                console.log("request result:");
+                console.log(res);
 
                 if (res.ok) {
                     setResults(res.results)
@@ -1172,7 +1240,7 @@ export default function SearchPage({ setError, setLoading, setResults }) {
      * {state === 2 && <PurposeStep />}
      * ```
      */
-    const [step, setStep] = useState(2);
+    const [step, setStep] = useState(0);
 
     return (
         <div className="main-container">

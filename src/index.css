@@ -99,6 +99,10 @@
   @apply flex flex-row space-x-2 items-center
 }
 
+@utility double-selector-container {
+  @apply w-full flex flex-row justify-between gap-10 row-span-3
+}
+
 /* ------------------------------------------- */
 /* ----------- SEARCH PAGE STYLING ----------- */
 /* ------------------------------------------- */
@@ -148,7 +152,7 @@
 }
 
 @utility reason-list-container {
-  @apply row-span-3 h-full w-2/3 justify-self-center flex flex-row justify-between
+  @apply  h-full w-2/3 justify-self-center flex flex-row justify-between
 }
 
 @utility reason-list-item {

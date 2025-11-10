@@ -845,7 +845,7 @@ export function LoadingSpinner({
 
 // TODO: jsdoc
 export function DoubleSelector({
-    containerClassName = "w-full flex flex-row justify-between gap-10",
+    containerClassName = "double-selector-container",
     categoryValue = "",
     categoryOnChange = () => {console.log("[ERROR] category onChange is not defined")},
     categoryLabel = "Category Label",
@@ -885,11 +885,8 @@ export function DoubleSelector({
                         onChange={itemOnChange}
                     >
                         {itemItems && itemItems.map((item) => (
-                            <MenuItem value={item.value} key={item.value}>{item.label}</MenuItem>
+                            <MenuItem value={item.value} key={item.value} name={item.label} >{item.label}</MenuItem>
                         ))}
-                        <MenuItem value={10}>Ten</MenuItem>
-                        <MenuItem value={20}>Twenty</MenuItem>
-                        <MenuItem value={30}>Thirty</MenuItem>
                     </Select>
                 </FormControl>
             </Box>
