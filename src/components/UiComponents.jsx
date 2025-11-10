@@ -1,35 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
 import { Slider, Autocomplete, TextField, CircularProgress, Typography, Box } from "@mui/material";
+import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import PropTypes from 'prop-types';
 
 /**
  * **normalize**
- * 
+ *
  * Utility function for `AutocompleteSearchBar` that prepares a string
  * for reliable **case-insensitive and accent-insensitive comparison**.
- * 
+ *
  * Converts input text to lowercase, removes diacritical marks (e.g., `è → e`, `ò → o`),
  * and trims whitespace — making searches robust across different user inputs.
- * 
+ *
  * ---
- * 
+ *
  * @function normalize
- * @param {string} [s=""]  
- * Input string to normalize.  
+ * @param {string} [s=""]
+ * Input string to normalize.
  * If `undefined` or `null`, defaults to an empty string.
- * 
- * @returns {string}  
+ *
+ * @returns {string}
  * The normalized string, lowercase and stripped of diacritics and leading/trailing spaces.
- * 
+ *
  * ---
- * 
+ *
  * @example
  * ```js
  * normalize("  Pésàro  "); // → "pesaro"
  * normalize("MILANO");     // → "milano"
  * normalize("");            // → ""
  * ```
- * 
+ *
  * @usage
  * Used internally by `cityFilter` to compare user input and city labels consistently.
  */
@@ -39,43 +40,43 @@ const normalize = (s = "") =>
 // TODO: it should stay somewhere in lib/
 /**
  * **cityFilter**
- * 
+ *
  * Custom filtering algorithm for `AutocompleteSearchBar`, used to produce
  * **relevance-ranked suggestions** when searching among a large list of cities or localities.
- * 
+ *
  * Unlike default lexicographic filters, it ranks results by *similarity*:
  * - Exact matches appear first (score = 1000)
  * - Prefix matches next (score = 800 - label length)
  * - Substring matches later (score = 600 - position - length * 0.01)
  * - Non-matching items are excluded
- * 
+ *
  * Results are returned **sorted in descending order of score**.
- * 
+ *
  * ---
- * 
+ *
  * @function cityFilter
- * @param {Array<string|Object>} options  
- * The full list of available autocomplete options.  
+ * @param {Array<string|Object>} options
+ * The full list of available autocomplete options.
  * Each item can be a string or an object with `label` or `nome`.
- * 
- * @param {{ inputValue: string }} context  
- * Object provided by MUI’s `Autocomplete` `filterOptions` function.  
+ *
+ * @param {{ inputValue: string }} context
+ * Object provided by MUI’s `Autocomplete` `filterOptions` function.
  * Contains the current user input under `inputValue`.
- * 
- * @returns {Array<string|Object>}  
+ *
+ * @returns {Array<string|Object>}
  * The filtered and sorted array of matching options, highest score first.
- * 
+ *
  * ---
- * 
+ *
  * @example
  * ```js
  * const cities = ["Roma", "Milano", "Firenze", "Rimini"];
- * 
+ *
  * // user types "ri"
  * const results = cityFilter(cities, { inputValue: "ri" });
  * // → ["Rimini", "Firenze"]
  * ```
- * 
+ *
  * @usage
  * Used as a custom `filterOptions` prop in MUI’s `<Autocomplete>` component:
  * ```jsx
@@ -109,60 +110,60 @@ const cityFilter = (options, { inputValue }) => {
 
 /**
  * **AutocompleteSearchBar**
- * 
- * React functional component providing a **smart city/location search field**  
- * with autocomplete suggestions based on user input.  
- * 
- * It extends MUI’s `<Autocomplete>` with a **custom filtering algorithm (`cityFilter`)**  
+ *
+ * React functional component providing a **smart city/location search field**
+ * with autocomplete suggestions based on user input.
+ *
+ * It extends MUI’s `<Autocomplete>` with a **custom filtering algorithm (`cityFilter`)**
  * that ranks results by textual similarity (not just prefix match), making it ideal for large lists of Italian cities.
- * 
+ *
  * ---
- * 
+ *
  * ### 🔍 Behavior
- * - Displays a text field (`TextField`) with suggestion dropdown.  
- * - Syncs the internal input text (`inputValue`) with the parent-controlled `value`.  
- * - When the user selects an option, both `setValue` (parent) and `inputValue` (internal) are updated.  
+ * - Displays a text field (`TextField`) with suggestion dropdown.
+ * - Syncs the internal input text (`inputValue`) with the parent-controlled `value`.
+ * - When the user selects an option, both `setValue` (parent) and `inputValue` (internal) are updated.
  * - Uses the custom filter `cityFilter` for flexible, accent-insensitive matches.
- * 
+ *
  * ---
- * 
+ *
  * @component
- * 
- * @param {Object} props  
+ *
+ * @param {Object} props
  * Component props.
- * 
- * @param {string|null} [props.value=null]  
- * The **currently selected city** (controlled value).  
+ *
+ * @param {string|null} [props.value=null]
+ * The **currently selected city** (controlled value).
  * If `null`, no city is selected and the input shows the current text only.
- * 
- * @param {(newValue: string|null) => void} props.setValue  
- * Callback function to update the parent component when a new city is selected.  
+ *
+ * @param {(newValue: string|null) => void} props.setValue
+ * Callback function to update the parent component when a new city is selected.
  * Receives either a `string` (selected city) or `null` (if cleared).
- * 
- * @param {Array<string|{nome?: string, label?: string}>} props.options  
- * List of **available city options** for autocomplete.  
+ *
+ * @param {Array<string|{nome?: string, label?: string}>} props.options
+ * List of **available city options** for autocomplete.
  * Each item can be:
  * - a simple string (e.g. `"Roma"`)
  * - an object with a `nome` or `label` property.
- * 
- * @param {string} [props.label=""]  
+ *
+ * @param {string} [props.label=""]
  * Label displayed in the text field (`TextField`’s `label` prop).
- * 
- * @returns {JSX.Element}  
+ *
+ * @returns {JSX.Element}
  * A full-width Material UI `<Autocomplete>` component configured with custom filtering and selection behavior.
- * 
+ *
  * ---
- * 
+ *
  * @example
  * ```jsx
  * import { AutocompleteSearchBar } from "./AutocompleteSearchBar";
  * import { cityFilter } from "./utils";
- * 
+ *
  * const allCities = ["Roma", "Milano", "Torino", "Napoli"];
- * 
+ *
  * export function CityStep() {
  *   const [city, setCity] = useState(null);
- * 
+ *
  *   return (
  *     <AutocompleteSearchBar
  *       value={city}
@@ -173,16 +174,16 @@ const cityFilter = (options, { inputValue }) => {
  *   );
  * }
  * ```
- * 
+ *
  * ---
- * 
+ *
  * @usage
- * - Ideal as step 2 (“Dove lo stai cercando?”) of the property search wizard.  
- * - Combine with the `cityFilter`, `normalize`, and `getLabel` utilities for best results.  
+ * - Ideal as step 2 (“Dove lo stai cercando?”) of the property search wizard.
+ * - Combine with the `cityFilter`, `normalize`, and `getLabel` utilities for best results.
  * - Supports full-text search with accent normalization and prioritization of exact/prefix matches.
- * 
+ *
  * @accessibility
- * - Supports keyboard navigation and selection (`Enter`, `Home`, `End`).  
+ * - Supports keyboard navigation and selection (`Enter`, `Home`, `End`).
  * - `autoHighlight` and `selectOnFocus` improve UX consistency.
  */
 export function AutocompleteSearchBar({ value = null, setValue, options, label = "" }) {
@@ -245,11 +246,11 @@ export function AutocompleteSearchBar({ value = null, setValue, options, label =
  * Accessibility label used by the slider (`getAriaLabel` / value text).
  *
  * @param {[number, number]} props.value
- * **Controlled** numeric range `[minValue, maxValue]`.  
+ * **Controlled** numeric range `[minValue, maxValue]`.
  * The component derives its internal *draft* from this input and keeps it in sync.
  *
  * @param {(range:[number, number]) => void} [props.onCommit=(val)=>console.log(val)]
- * Called **once** when the user *releases* the slider thumbs (or otherwise commits), receiving the final `[min, max]`.  
+ * Called **once** when the user *releases* the slider thumbs (or otherwise commits), receiving the final `[min, max]`.
  * Use this to update the parent state (e.g., `setFilter`).
  *
  * @param {number} [props.min=0]
@@ -319,44 +320,44 @@ export function DoubleSlider({
 
     /**
      * **handleChange**
-     * 
-     * Event handler used to update the **temporary slider values** (`draft`)  
-     * during user interaction within the `DoubleSlider` component.  
-     * 
-     * It is triggered whenever the user drags one or both thumbs of the slider,  
+     *
+     * Event handler used to update the **temporary slider values** (`draft`)
+     * during user interaction within the `DoubleSlider` component.
+     *
+     * It is triggered whenever the user drags one or both thumbs of the slider,
      * and ensures that only valid array-based values are used to update state.
-     * 
+     *
      * ---
-     * 
+     *
      * @function handleChange
-     * 
-     * @param {Event} _  
-     * The React synthetic event automatically passed by the slider’s `onChange` handler.  
+     *
+     * @param {Event} _
+     * The React synthetic event automatically passed by the slider’s `onChange` handler.
      * It is unused in this context and therefore ignored.
-     * 
-     * @param {Array<number>} newValue  
-     * The new range array `[min, max]` emitted by the MUI `Slider` component  
+     *
+     * @param {Array<number>} newValue
+     * The new range array `[min, max]` emitted by the MUI `Slider` component
      * whenever the user moves the slider thumbs.
-     * 
-     * @returns {void}  
+     *
+     * @returns {void}
      * No return value. Updates the component’s internal `draft` state via `setDraft(newValue)`.
-     * 
+     *
      * ---
-     * 
+     *
      * @example
      * ```js
      * const handleChange = (_, newValue) => {
      *   if (Array.isArray(newValue)) setDraft(newValue);
      * };
-     * 
+     *
      * <Slider onChange={handleChange} value={draft} />
      * ```
-     * 
+     *
      * ---
-     * 
+     *
      * @usage
-     * - Used as the `onChange` callback for the Material UI `Slider`.  
-     * - Ensures stability by checking that `newValue` is an array before updating.  
+     * - Used as the `onChange` callback for the Material UI `Slider`.
+     * - Ensures stability by checking that `newValue` is an array before updating.
      * - Works together with `handleCommit` to propagate updates to the parent only after release.
      */
     const handleChange = (_, newValue) => {
@@ -365,43 +366,43 @@ export function DoubleSlider({
 
     /**
      * **handleCommit**
-     * 
-     * Event handler that triggers the **final update** of the selected range values  
-     * in the `DoubleSlider` component when the user **releases the slider thumb**.  
-     * 
-     * It calls the parent’s `onCommit` callback (if provided) with the current  
-     * internal `draft` state, allowing the parent component to synchronize  
+     *
+     * Event handler that triggers the **final update** of the selected range values
+     * in the `DoubleSlider` component when the user **releases the slider thumb**.
+     *
+     * It calls the parent’s `onCommit` callback (if provided) with the current
+     * internal `draft` state, allowing the parent component to synchronize
      * its filter or controlled value state accordingly.
-     * 
+     *
      * ---
-     * 
+     *
      * @function handleCommit
-     * 
-     * @returns {void}  
-     * No return value. Executes the `onCommit` callback with the current draft array.  
+     *
+     * @returns {void}
+     * No return value. Executes the `onCommit` callback with the current draft array.
      * Example output: `[minValue, maxValue]`.
-     * 
+     *
      * ---
-     * 
+     *
      * @example
      * ```js
      * const handleCommit = () => {
      *   onCommit?.(draft); // updates the parent only on release
      * };
-     * 
+     *
      * <Slider
      *   value={draft}
      *   onChange={handleChange}
      *   onChangeCommitted={handleCommit}
      * />
      * ```
-     * 
+     *
      * ---
-     * 
+     *
      * @usage
-     * - Used as the `onChangeCommitted` handler for the Material UI `Slider`.  
-     * - Ensures that parent components (e.g., `FilterSection`) are updated **only after**  
-     *   the user finishes adjusting the range, reducing unnecessary re-renders.  
+     * - Used as the `onChangeCommitted` handler for the Material UI `Slider`.
+     * - Ensures that parent components (e.g., `FilterSection`) are updated **only after**
+     *   the user finishes adjusting the range, reducing unnecessary re-renders.
      * - Safely calls `onCommit` only if it exists (`?.` operator).
      */
     const handleCommit = () => {
@@ -409,11 +410,12 @@ export function DoubleSlider({
     };
 
     return (
-        <div className="w-full h-1/3 flex flex-col justify-between items-center px-6">
+        <div className="double-slider-container">
+            {/* Section Title */}
             <h1
-                className="filter-heading"
-                // className="w-full text-caput-mortuum text-center text-lg font-bold h-[4 0px]"
+                className="h3-title"
             >{title}</h1>
+            {/* Real Slider */}
             <Slider
                 value={draft}
                 min={min}
@@ -426,15 +428,19 @@ export function DoubleSlider({
                 getAriaValueText={(v) => `€ ${v}`}
                 disableSwap
                 sx={{
-                    color: '#E44D26',
+                    color: '#ebbd47',
                 }}
             />
+            {/* Input fields (lower and higher) */}
             <div className="w-full flex flex-row justify-between">
-                <div className="flex flex-row space-x-2 items-center">
-                    <div className="w-7/12 py-2 px-2 border-2 border-gray-400 rounded-lg flex items-center justify-center">
-                        {Icon && <Icon className="text-gray-500 mr-1" />}
+                {/* Lower value input field */}
+                <div className="double-slider-input-outer-container justify-start">
+                    <div className="double-slider-input-inner-container">
+                        {/* Icon (if present) */}
+                        {Icon && <Icon className="double-slider-input-icon" />}
+                        {/* text input for the lower value */}
                         <input
-                            className="appearance-none block w-full text-right"
+                            className="double-slider-text-input"
                             type="text"
                             value={draft[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
                             onChange={(e) => {
@@ -444,14 +450,19 @@ export function DoubleSlider({
                             }}
                         />
                     </div>
+                    {/* Input field label */}
                     <label>min</label>
                 </div>
-                <div className="flex flex-row space-x-2 items-center justify-end">
+                {/* Higher value input field */}
+                <div className="double-slider-input-outer-container justify-end">
+                    {/* Input field label */}
                     <label>max</label>
-                    <div className="w-7/12 py-2 px-2 border-2 border-gray-400 rounded-lg flex items-center justify-center">
-                        {Icon && <Icon className="text-gray-500 mr-1" />}
+                    <div className="double-slider-input-inner-container">
+                        {/* Icon (if present) */}
+                        {Icon && <Icon className="double-slider-input-icon" />}
+                        {/* text input for the higher value */}
                         <input
-                            className="appearance-none block w-full text-right"
+                            className="double-slider-text-input"
                             type="text"
                             value={draft[1].toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
                             onChange={(e) => {
@@ -467,43 +478,44 @@ export function DoubleSlider({
     );
 }
 
+// TODO: clean styling
 /**
  * **MultilineTextField**
- * 
- * React functional component that renders a styled **multiline text input**  
- * (based on Material UI’s `<TextField>` component).  
- * 
+ *
+ * React functional component that renders a styled **multiline text input**
+ * (based on Material UI’s `<TextField>` component).
+ *
  * Commonly used for optional descriptions or free-form user input,
  * such as in the `WhySection` of the property search wizard,
  * where users can specify additional preferences or notes.
- * 
+ *
  * ---
- * 
+ *
  * @component
- * 
- * @param {Object} props  
+ *
+ * @param {Object} props
  * Component props.
- * 
- * @param {string} [props.id="outlined-multiline-static"]  
- * The unique identifier assigned to the text field.  
+ *
+ * @param {string} [props.id="outlined-multiline-static"]
+ * The unique identifier assigned to the text field.
  * Used for accessibility and form handling.
- * 
- * @param {string} [props.label="Multiline"]  
- * The text label displayed above the input field.  
+ *
+ * @param {string} [props.label="Multiline"]
+ * The text label displayed above the input field.
  * Indicates the purpose or placeholder meaning of the field.
- * 
- * @param {string} [props.defaultValue="Default Value"]  
+ *
+ * @param {string} [props.defaultValue="Default Value"]
  * The default text content shown inside the field when it first renders.
- * 
- * @param {string} [props.itemClassName="w-full"]  
- * Tailwind or custom CSS class string applied to the outer `<TextField>`.  
+ *
+ * @param {string} [props.itemClassName="w-full"]
+ * Tailwind or custom CSS class string applied to the outer `<TextField>`.
  * Defaults to `"w-full"` for full-width layout.
- * 
- * @returns {JSX.Element}  
+ *
+ * @returns {JSX.Element}
  * A Material UI `<TextField>` component configured for multiline input (4 rows by default).
- * 
+ *
  * ---
- * 
+ *
  * @example
  * ```jsx
  * <MultilineTextField
@@ -513,12 +525,12 @@ export function DoubleSlider({
  *   itemClassName="mt-4 w-3/4"
  * />
  * ```
- * 
+ *
  * ---
- * 
+ *
  * @usage
- * - Used in the **WhySection** for optional user descriptions.  
- * - Fully compatible with MUI form systems; can be wrapped in `<form>` or controlled manually.  
+ * - Used in the **WhySection** for optional user descriptions.
+ * - Fully compatible with MUI form systems; can be wrapped in `<form>` or controlled manually.
  * - Modify `rows` or `multiline` behavior directly in the JSX if needed.
  */
 export function MultilineTextField({
@@ -544,47 +556,48 @@ export function MultilineTextField({
     );
 }
 
+
 /**
  * **BackButton**
- * 
- * React functional component that renders a **navigation button**  
- * allowing the user to move **backward** in the multi-step search wizard flow.  
- * 
+ *
+ * React functional component that renders a **navigation button**
+ * allowing the user to move **backward** in the multi-step search wizard flow.
+ *
  * The button is **hidden when `step` equals `0`**, meaning it is not shown
- * during the first phase (“Cosa stai cercando?”).  
+ * during the first phase (“Cosa stai cercando?”).
  * For all subsequent steps, it becomes visible and triggers the provided callback
  * to return to the previous step.
- * 
+ *
  * ---
- * 
+ *
  * @component
- * 
- * @param {Object} props  
+ *
+ * @param {Object} props
  * Component props.
- * 
- * @param {number} props.step  
- * The current step index of the wizard.  
- * When `0`, the button is not rendered (returns an empty fragment).  
+ *
+ * @param {number} props.step
+ * The current step index of the wizard.
+ * When `0`, the button is not rendered (returns an empty fragment).
  * When `> 0`, the button is displayed and can be clicked.
- * 
- * @param {Function} props.onClickFunction  
- * Callback executed when the user clicks the button.  
+ *
+ * @param {Function} props.onClickFunction
+ * Callback executed when the user clicks the button.
  * Typically used to decrement the current step:
  * ```js
  * const handleBack = () => setStep(prev => Math.max(0, prev - 1));
  * ```
- * 
- * @param {string} [props.itemClassName="bg-gray-300 hover:bg-gray-400/70 px-10 py-4 text-2xl text-cinnabar font-semibold rounded-xl"]  
- * CSS class string applied to the button for styling.  
- * Accepts Tailwind or custom utility classes.  
+ *
+ * @param {string} [props.itemClassName="bg-gray-300 hover:bg-gray-400/70 px-10 py-4 text-2xl text-cinnabar font-semibold rounded-xl"]
+ * CSS class string applied to the button for styling.
+ * Accepts Tailwind or custom utility classes.
  * Default styling provides a gray rounded button with hover effect.
- * 
- * @returns {JSX.Element}  
- * A `<button>` element labeled “Indietro” when `step > 0`,  
+ *
+ * @returns {JSX.Element}
+ * A `<button>` element labeled “Indietro” when `step > 0`,
  * or an empty React fragment (`<></>`) when `step == 0`.
- * 
+ *
  * ---
- * 
+ *
  * @example
  * ```jsx
  * <BackButton
@@ -592,18 +605,18 @@ export function MultilineTextField({
  *   onClickFunction={() => setStep(prev => prev - 1)}
  * />
  * ```
- * 
+ *
  * ---
- * 
+ *
  * @usage
- * - Used in the navigation controls of the property search wizard.  
- * - Commonly paired with a “Next” or “Continue” button.  
+ * - Used in the navigation controls of the property search wizard.
+ * - Commonly paired with a “Next” or “Continue” button.
  * - Hidden automatically in the first step to simplify UX.
  */
 export function BackButton({
     step,
     onClickFunction,
-    itemClassName = "bg-gray-300 hover:bg-gray-400/70 px-10 py-4 text-2xl text-cinnabar font-semibold rounded-xl",
+    itemClassName = "main-button button-secondary-colors",
     setError = (msg) => { console.error("Error: " + msg) }
 }) {
     if (step == 0) {
@@ -612,7 +625,7 @@ export function BackButton({
 
     return (
         <button
-            className={itemClassName + (step == 0 ? "hidden" : "")}
+            className={itemClassName}
             onClick={onClickFunction}
         >
             Indietro
@@ -622,52 +635,52 @@ export function BackButton({
 
 /**
  * **ProceedButton**
- * 
+ *
  * React functional component that renders the **forward navigation button**
- * for the multi-step property search wizard.  
- * 
+ * for the multi-step property search wizard.
+ *
  * The button text and behavior vary dynamically based on the current `step` value:
- * 
+ *
  * | Step | Label | Action |
  * |------|--------|--------|
  * | **0** | “Avanti” | Proceeds from the “Cosa stai cercando?” step. |
  * | **1** | “Avanti” | Proceeds from the “Dove lo stai cercando?” step. |
  * | **2** | “Cerca” | Final step — triggers the search or form submission. |
- * 
+ *
  * Any invalid `step` value (not `0`, `1`, or `2`) logs an error and sets a generic fallback message.
- * 
+ *
  * ---
- * 
+ *
  * @component
- * 
- * @param {Object} props  
+ *
+ * @param {Object} props
  * Component props.
- * 
- * @param {number} props.step  
- * The current wizard step index.  
- * Accepts values `0`, `1`, or `2`.  
+ *
+ * @param {number} props.step
+ * The current wizard step index.
+ * Accepts values `0`, `1`, or `2`.
  * Determines which button is rendered and what label it displays.
- * 
- * @param {Function} props.onSubmit  
- * Callback executed when the button is clicked.  
- * Typically advances to the next step or executes the search action at the final step.  
+ *
+ * @param {Function} props.onSubmit
+ * Callback executed when the button is clicked.
+ * Typically advances to the next step or executes the search action at the final step.
  * Example:
  * ```js
  * const handleProceed = () => setStep(prev => prev + 1);
  * ```
- * 
- * @param {string} [props.itemClassName="bg-cinnabar hover:bg-cinnabar/70 px-10 py-4 text-2xl text-white rounded-xl"]  
- * CSS class string applied to the button.  
- * Provides default styling (red background, white text, rounded corners).  
+ *
+ * @param {string} [props.itemClassName="bg-cinnabar hover:bg-cinnabar/70 px-10 py-4 text-2xl text-white rounded-xl"]
+ * CSS class string applied to the button.
+ * Provides default styling (red background, white text, rounded corners).
  * Can be overridden to customize button appearance.
- * 
- * @returns {JSX.Element|void}  
+ *
+ * @returns {JSX.Element|void}
  * Returns:
- * - A `<button>` labeled “Avanti” or “Cerca”, depending on the step; or  
+ * - A `<button>` labeled “Avanti” or “Cerca”, depending on the step; or
  * - Nothing (logs an error) if `step` has an invalid value.
- * 
+ *
  * ---
- * 
+ *
  * @example
  * ```jsx
  * <ProceedButton
@@ -678,22 +691,22 @@ export function BackButton({
  *   }}
  * />
  * ```
- * 
+ *
  * ---
- * 
+ *
  * @usage
- * - Used at the bottom of each wizard step to advance or trigger the search process.  
- * - Complements the `BackButton` for bidirectional navigation.  
+ * - Used at the bottom of each wizard step to advance or trigger the search process.
+ * - Complements the `BackButton` for bidirectional navigation.
  * - The label changes automatically to “Cerca” on the final step to signal submission.
- * 
+ *
  * @accessibility
- * - Uses a semantic `<button>` element.  
+ * - Uses a semantic `<button>` element.
  * - Supports keyboard focus and activation via Enter/Space.
  */
 export function ProceedButton({
     step,
     onSubmit,
-    itemClassName = "bg-cinnabar hover:bg-cinnabar/70 px-10 py-4 text-2xl text-white rounded-xl",
+    itemClassName = "main-button button-primary-colors",
 }) {
     const FirstButton = () => {
         return (
@@ -702,6 +715,7 @@ export function ProceedButton({
                 onClick={onSubmit}
             >
                 Avanti
+                <ArrowCircleRightIcon />
             </button>
         );
     }
@@ -729,85 +743,86 @@ export function ProceedButton({
     }
 }
 
+// TODO: clean styling
 /**
  * **LoadingSpinner**
- * 
+ *
  * React functional component that displays a **circular progress indicator**
- * with optional percentage display and a customizable text message.  
- * 
+ * with optional percentage display and a customizable text message.
+ *
  * It supports two operating modes:
- * 
- * 1. **Controlled Mode (`value`)** – when the `value` prop is provided,  
+ *
+ * 1. **Controlled Mode (`value`)** – when the `value` prop is provided,
  *    the progress percentage is externally controlled (0–100).
- * 2. **Timed Mode (`time`)** – when `value` is `null` and `time` is specified,  
+ * 2. **Timed Mode (`time`)** – when `value` is `null` and `time` is specified,
  *    the spinner automatically fills over the given duration (in milliseconds).
- * 
+ *
  * ---
- * 
+ *
  * ### 🎛️ Size Variants
  * The visual size and thickness of the spinner are determined by the `size` prop:
- * 
+ *
  * | Size | Spinner (px) | Thickness | Font Size | Label Margin |
  * |------|---------------|------------|------------|---------------|
  * | **0** | 56 | 4 | 12px | 0.75em |
  * | **1** | 90 | 5 | 14px | 1em |
  * | **2** | 120 | 6 | 18px | 1.25em |
- * 
+ *
  * ---
- * 
+ *
  * @component
- * 
- * @param {Object} props  
+ *
+ * @param {Object} props
  * Component props.
- * 
- * @param {string|null} [props.message=null]  
- * Optional message displayed below the spinner.  
+ *
+ * @param {string|null} [props.message=null]
+ * Optional message displayed below the spinner.
  * Used to describe the loading context (e.g. *"Loading search results..."*).
- * 
- * @param {number|null} [props.value=null]  
- * Controlled progress value between `0` and `100`.  
+ *
+ * @param {number|null} [props.value=null]
+ * Controlled progress value between `0` and `100`.
  * When set, the spinner reflects this exact percentage and disables timed mode.
- * 
- * @param {number|null} [props.time=null]  
- * Duration (in milliseconds) for automatic timed progress.  
+ *
+ * @param {number|null} [props.time=null]
+ * Duration (in milliseconds) for automatic timed progress.
  * Active only when `value` is `null`. The spinner animates from 0 to 100% within this time.
- * 
- * @param {0|1|2} [props.size=1]  
- * Visual size preset for the spinner.  
- * - `0` → small  
- * - `1` → medium (default)  
- * - `2` → large  
- * 
- * @param {string} [props.color="var(--color-cinnabar)"]  
+ *
+ * @param {0|1|2} [props.size=1]
+ * Visual size preset for the spinner.
+ * - `0` → small
+ * - `1` → medium (default)
+ * - `2` → large
+ *
+ * @param {string} [props.color="var(--color-cinnabar)"]
  * Custom color for the spinner and text (CSS variable or valid color string).
- * 
- * @returns {JSX.Element}  
- * A composed layout with a circular progress bar, numeric percentage indicator,  
+ *
+ * @returns {JSX.Element}
+ * A composed layout with a circular progress bar, numeric percentage indicator,
  * and optional descriptive message.
- * 
+ *
  * ---
- * 
+ *
  * @example
  * ```jsx
  * // Controlled Mode (progress externally managed)
  * <LoadingSpinner value={75} message="Uploading file..." />
- * 
+ *
  * // Timed Mode (fills automatically in 3 seconds)
  * <LoadingSpinner time={3000} message="Preparing search..." />
- * 
+ *
  * // Large variant with custom color
  * <LoadingSpinner size={2} color="#E44D26" message="Please wait..." />
  * ```
- * 
+ *
  * ---
- * 
+ *
  * @usage
- * - Used in loading states within the search wizard or API operations.  
- * - Ideal for representing determinate progress or timed transitions.  
+ * - Used in loading states within the search wizard or API operations.
+ * - Ideal for representing determinate progress or timed transitions.
  * - Automatically clamps progress values between `0` and `100`.
- * 
+ *
  * @accessibility
- * - Includes `role="status"` and `aria-live="polite"` for screen readers.  
+ * - Includes `role="status"` and `aria-live="polite"` for screen readers.
  * - The percentage text is visible and readable at all sizes.
  */
 export function LoadingSpinner({

@@ -99,6 +99,7 @@ const BASEFILTER = {
     "request_description": ""
 }
 
+// TODO: clean styling
 async function tempScrape(
     filter,
     setError = () => { console.error("[TEMPSCRAPE]: setError non è definita") },
@@ -153,11 +154,13 @@ async function tempScrape(
     }
 }
 
+// TODO: clean styling
 SearchSectionTitle.propTypes = {
     step: PropTypes.number.isRequired,
     className: PropTypes.string,
 };
 
+// TODO: clean styling
 /**
  * **SearchSectionTitle**
  * 
@@ -329,14 +332,14 @@ export function FilterSection({ filter, setFilter }) {
                     {SearchTypeOption.map((opt) => (
                         <li key={String(opt.value)} className="flex flex-row items-center pl-4">
                             <div
-                                className={`filter-type-circle ${filter?.type == opt.value ? 'bg-secondary' : ''}`}
+                                className={`circle-selector-empty ${filter?.type == opt.value ? 'bg-secondary' : ''}`}
                             />
                             <button
                                 type="button"
                                 onClick={() =>
                                     setFilter((prev) => ({ ...prev, type: opt.value }))
                                 }
-                                className={`filter-type-option ${filter?.type === opt.value
+                                className={`circle-selector-option ${filter?.type === opt.value
                                     ? "font-bold text-primary"
                                     : ""
                                     }`}
@@ -351,7 +354,7 @@ export function FilterSection({ filter, setFilter }) {
                             className={`filter-type-circle border-transparent`}
                         />
                         <span
-                            onClick={() => {}}
+                            onClick={() => { }}
                             disabled
                             className={"flex w-full text-left py-2 px-3 font-bold text-transparent"}
                         >
@@ -534,7 +537,7 @@ export function CitySection({ filter, setFilter }) {
     };
 
     return (
-        <div className="w-full h-full flex flex-row items-center justify-center">
+        <div className="city-section-container">
             <AutocompleteSearchBar
                 options={comuni}
                 label="Seleziona il comune in cui stai cercando"
@@ -545,6 +548,7 @@ export function CitySection({ filter, setFilter }) {
     );
 }
 
+// TODO: clean styling
 /**
  * **WhySection**
  * 
@@ -612,37 +616,35 @@ export function CitySection({ filter, setFilter }) {
  */
 export function WhySection({ filter, setFilter }) {
     return (
-        <div className="w-full h-full grid grid-rows-8">
+        <div className="why-section-container">
             {/* capital gain or abitative ? */}
-            <div className="row-span-3 flex justify-center">
-                <ul className="w-2/3 h-full flex flex-row justify-between">
-                    {WhyOptions.map((opt) => (
-                        <li key={String(opt.value)} className="flex flex-row items-center pl-4">
-                            <div
-                                onClick={() =>
-                                    setFilter((prev) => ({ ...prev, why: opt.value }))
-                                }
-                                className={`w-[17px] h-[15px] border-2 border-cinnabar rounded-full ${filter?.why == opt.value ? 'bg-cinnabar' : ''}`}
-                            />
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setFilter((prev) => ({ ...prev, why: opt.value }))
-                                }
-                                className={`w-full text-left text-xl py-2 px-3 ${filter?.why === opt.value
-                                    ? "font-bold"
-                                    : ""
-                                    }`}
-                            >
-                                {opt.label}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            <ul className="reason-list-container">
+                {WhyOptions.map((opt) => (
+                    <li key={String(opt.value)} className="reason-list-item">
+                        <div
+                            onClick={() =>
+                                setFilter((prev) => ({ ...prev, why: opt.value }))
+                            }
+                            className={`circle-selector-empty ${filter?.why == opt.value ? 'bg-secondary' : ''}`}
+                        />
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setFilter((prev) => ({ ...prev, why: opt.value }))
+                            }
+                            className={`circle-selector-option ${filter?.why === opt.value
+                                ? "font-semibold text-primary"
+                                : ""
+                                }`}
+                        >
+                            {opt.label}
+                        </button>
+                    </li>
+                ))}
+            </ul>
             {/* little desciption (optional) */}
-            <div className="row-span-5 w-full">
-                <h2 className="text-xl font-semibold tracking-tight" >Manca qualcosa?</h2>
+            <div className="why-description-container">
+                <h2 className="h4-title" >Manca qualcosa?</h2>
                 <p className="text-sm text-gray-500 mb-2"
                 >Se c'è qualche caratteristicha importante che non è stata nominata fin'ora, scrivila qui sotto</p>
                 <MultilineTextField
@@ -657,6 +659,7 @@ export function WhySection({ filter, setFilter }) {
     );
 }
 
+// TODO: clean styling
 /**
  * **ErrorSection**
  * 
@@ -719,11 +722,94 @@ export function ErrorSection({ message }) {
     );
 }
 
-// TODO: jsdoc
+/**
+ * **SectionContainer**
+ *
+ * React functional component that orchestrates the **three-step search wizard** UI,
+ * rendering the appropriate section for the current `step` and wiring up navigation,
+ * validation, and submission logic.
+ *
+ * Structure:
+ * - **Title**: `<SearchSectionTitle />` driven by `step`
+ * - **Body**: memoized section element (`FilterSection` → `CitySection` → `WhySection`)
+ * - **Inline error**: `sectionError` (per-step validation feedback)
+ * - **Navigation**: `<BackButton />` and `<ProceedButton />` with handlers
+ *
+ * Internals:
+ * - `sectionError` (local state) holds contextual validation messages (e.g., missing city).
+ * - `sectionEl` (memoized) selects the correct step component:
+ *   - `0` → `<FilterSection filter setFilter />`
+ *   - `1` → `<CitySection filter setFilter />`
+ *   - `2` → `<WhySection filter setFilter />`
+ *   - default → renders a technical error message
+ * - `buttonOnSubmit` advances the wizard and, on the last step, calls `tempScrape`
+ *   then updates `setResults` or surfaces errors via `setError`.
+ * - `buttonBackClick` safely navigates backward (steps `1` and `2`) and clears `sectionError`.
+ *
+ * ---
+ *
+ * @component
+ *
+ * @param {Object} props
+ * Component props.
+ *
+ * @param {0|1|2} [props.step=0]
+ * Current wizard step:
+ * - `0` = Filters
+ * - `1` = City
+ * - `2` = Why/Purpose
+ *
+ * @param {(nextStep:number)=>void} props.setStep
+ * Setter used to change the current step (forward/backward navigation).
+ *
+ * @param {Filter} props.filter
+ * The shared search filter object (see `BASEFILTER` shape).
+ *
+ * @param {(updater:Function|Filter)=>void} [props.setFilter=() => { console.log("setFilter is not defined") }]
+ * Setter used to mutate the shared `filter` state from child sections.
+ *
+ * @param {(msg:string)=>void} [props.setError=() => { console.log("setError is not defined") }]
+ * Global error setter for non-recoverable / cross-step errors (e.g., API failures).
+ *
+ * @param {(loading:boolean)=>void} [props.setLoading=() => { console.log("setLoading is not defined") }]
+ * Global loading state setter used during the final API submission.
+ *
+ * @param {(results:any)=>void} [props.setResults=() => { console.log("setResults is not defined") }]
+ * Setter that receives scraper results upon a successful final submission.
+ *
+ * @returns {JSX.Element}
+ * A container that renders the step title, the current step section, an inline error message (if any),
+ * and the navigation controls (Back/Proceed).
+ *
+ * ---
+ *
+ * @example
+ * ```jsx
+ * <SectionContainer
+ *   step={step}
+ *   setStep={setStep}
+ *   filter={filter}
+ *   setFilter={setFilter}
+ *   setError={setError}
+ *   setLoading={setLoading}
+ *   setResults={setResults}
+ * />
+ * ```
+ *
+ * ---
+ *
+ * @usage
+ * - Place as the central content of the search page to manage step routing, validation, and submission.
+ * - Provide stable references for the setter props to avoid unnecessary re-mounts of child sections.
+ * - Ensure `tempScrape` is available in scope and returns `{ ok: boolean, results?: any }`.
+ *
+ * @accessibility
+ * - Step title is rendered via a semantic heading (`SearchSectionTitle`), improving screen reader flow.
+ * - Inline validation messages are shown near the navigation controls for immediate feedback.
+ */
 export function SectionContainer({
     step = 0,
     setStep,
-    itemClassName = "",
     filter,
     setFilter = () => { console.log("setFilter is not defined") },
     setError = () => { console.log("setError is not defined") },
@@ -731,7 +817,6 @@ export function SectionContainer({
     setResults = () => { console.log("setResults is not defined") }
 }) {
     const [sectionError, setSectionError] = useState(null);
-    const [pageError, setPageError] = useState(null);//"Si è verificato un errore generico, riprova più tardi o contatta il supporto")
 
     const sectionEl = React.useMemo(() => {
         switch (step) {
@@ -745,34 +830,87 @@ export function SectionContainer({
     }, [step, filter, setFilter]); // ricrea l'elemento, ma se il tipo resta lo stesso (es. WhySection) NON viene smontato
 
 
-    // TODO: JSDoc
+    /**
+     * **buttonOnSubmit**
+     * 
+     * Asynchronous event handler that manages the **forward navigation logic**
+     * and submission process for the multi-step property search wizard.  
+     * 
+     * Its behavior dynamically changes based on the current `step` value:
+     * 
+     * | Step | Description | Action |
+     * |------|--------------|--------|
+     * | **0** | *Filters step (“Cosa stai cercando?”)* | Advances to step 1 without validation. |
+     * | **1** | *City selection step (“Dove lo stai cercando?”)* | Validates the presence of `filter.city`; if valid, proceeds to step 2; otherwise sets an error message. |
+     * | **2** | *Final step (“Perché lo stai cercando?”)* | Sends the `filter` data to the backend scraper API and updates results or error states accordingly. |
+     * 
+     * Any invalid step value triggers a generic fallback error message and logs a descriptive error in the console.
+     * 
+     * ---
+     * 
+     * @async
+     * @function buttonOnSubmit
+     * 
+     * @returns {Promise<void>}  
+     * No return value. Updates internal state and UI through side effects.
+     * 
+     * @throws {Error}  
+     * Throws internally if the scraping request fails, caught and handled gracefully within the `try/catch` block.
+     * 
+     * ---
+     * 
+     * @example
+     * ```js
+     * const buttonOnSubmit = async () => {
+     *   if (step === 0) setStep(step + 1);
+     *   else if (step === 1 && filter.city) setStep(step + 1);
+     *   else if (step === 2) {
+     *     try {
+     *       const res = await tempScrape(filter, setError, setLoading);
+     *       if (res.ok) setResults(res.results);
+     *       else setError("Generic API error");
+     *     } catch (err) {
+     *       setError("Network error while contacting scraper");
+     *     }
+     *   }
+     * };
+     * ```
+     * 
+     * ---
+     * 
+     * @usage
+     * - Used as the `onSubmit` handler for the **ProceedButton** component.  
+     * - Advances the wizard through its three logical steps and triggers the backend request at the end.  
+     * - Provides user feedback and error handling when required fields are missing or when API calls fail.  
+     * - Ensures smooth and predictable navigation between steps.
+     * 
+     * @accessibility
+     * - Validates essential inputs before proceeding (e.g., city).  
+     * - Uses clear, user-friendly error messages for invalid or incomplete inputs.
+     */
     const buttonOnSubmit = async () => {
-        if (step == 0) {
+        if (step == 0) {            // First step (filters)
             setStep(step + 1)
-        } else if (step == 1) {
+        } else if (step == 1) {     // Second step (city), check if the user insert the city
             if (!filter["city"] || filter["city"] == null || filter["city"] == "") {
                 setSectionError("Inserire un comune valido per andare avanti")
             } else {
                 setSectionError(null)
                 setStep(step + 1)
             }
-        } else if (step == 2) {
-            // TODO: final submit -> start search with parameters
-            // TODO: temp debug print
-            console.log("SUBMITTED FILTER (2-final):")
-            console.log(filter)
-            const res = await tempScrape(filter, setError, setLoading)
+        } else if (step == 2) {     // Last step (why), send request to the scraper via api (Render.com)
+            try {
+                const res = await tempScrape(filter, setError, setLoading)
 
-            // TODO: temp debug print
-            console.log("res keys: " + Object.keys(res))
-            console.log("res.ok: " + res.ok);
-            console.log("res:")
-            console.log(res)
-
-            if (res.ok) {
-                setResults(res.results)
-                // TODO: temp debug print
-                console.log("results filled:");
+                if (res.ok) {
+                    setResults(res.results)
+                } else {
+                    setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
+                    console.error("ERROR: res.ok != true: " + res)
+                }
+            } catch (error) {
+                setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
+                console.error("ERROR: error catched sending request to the scraper: " + error)
             }
         } else {
             setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
@@ -838,16 +976,9 @@ export function SectionContainer({
         }
     }
 
-    if (pageError != null) {
-        return (
-            <ErrorSection message={pageError} />
-        );
-    }
-
     return (
         <div className="section-container">
             <SearchSectionTitle step={step} className="section-title" />
-            {/* <SelectSection /> */}
             {sectionEl}
             <div className="section-error-message">
                 {sectionError ?
@@ -856,7 +987,7 @@ export function SectionContainer({
                     <></>
                 }
             </div>
-            <div className="flex flex-row w-2/3 justify-between">
+            <div className="navigation-buttons-container">
                 {step == 0 ?
                     <div />
                     :
@@ -868,7 +999,73 @@ export function SectionContainer({
     );
 }
 
-// TODO: jsdoc
+/**
+ * **SearchPage**
+ *
+ * Top-level React component that initializes and coordinates the **search wizard page**.
+ * It owns the two core pieces of UI state:
+ * - **`filter`** – the active search filter object (initialized from `BASEFILTER`)
+ * - **`step`** – the current wizard step (`0`=filters, `1`=city, `2`=purpose)
+ *
+ * The component delegates rendering and interaction logic to `<SectionContainer />`,
+ * passing down state setters and app-level handlers for error/loading/results.
+ *
+ * ---
+ *
+ * @component
+ *
+ * @param {Object} props
+ * Component props.
+ *
+ * @param {(msg:string)=>void} props.setError
+ * App-level error reporter. Called by children (via `SectionContainer`) to surface
+ * user-visible errors (e.g., invalid step, API failures).
+ *
+ * @param {(loading:boolean)=>void} props.setLoading
+ * App-level loading state setter used during async operations (e.g., final scrape).
+ *
+ * @param {(results:any)=>void} props.setResults
+ * App-level results setter invoked after a successful scraping request.
+ *
+ * @returns {JSX.Element}
+ * The page scaffold that hosts the wizard container and wires the required state/handlers.
+ *
+ * ---
+ *
+ * @example
+ * ```jsx
+ * import SearchPage from "./SearchPage";
+ *
+ * export default function App() {
+ *   const [error, setError] = useState(null);
+ *   const [loading, setLoading] = useState(false);
+ *   const [results, setResults] = useState(null);
+ *
+ *   return (
+ *     <>
+ *       {loading && <LoadingSpinner message="Fetching listings..." />}
+ *       {error && <ErrorSection message={error} />}
+ *       <SearchPage
+ *         setError={setError}
+ *         setLoading={setLoading}
+ *         setResults={setResults}
+ *       />
+ *     </>
+ *   );
+ * }
+ * ```
+ *
+ * ---
+ *
+ * @usage
+ * - Use as the main entry for the search flow.  
+ * - `filter` and `step` are local to `SearchPage` and passed to `<SectionContainer />`.  
+ * - Ensure `BASEFILTER` is imported and stable to keep consistent initial state.
+ *
+ * @accessibility
+ * - Step transitions are surfaced via `<SearchSectionTitle />` inside the container,
+ *   improving screen reader context as users navigate.
+ */
 export default function SearchPage({ setError, setLoading, setResults }) {
     /** **filter state:** React state hook that stores the **current set of active search filters**
      * 
@@ -977,6 +1174,7 @@ export default function SearchPage({ setError, setLoading, setResults }) {
 
     return (
         <div className="main-container">
+            {/* TODO: I set min-h instead of h to make that the button always is in the container, have to handle the padding between the page and the container */}
             <SectionContainer
                 step={step}
                 setStep={setStep}

@@ -50,6 +50,22 @@
   @apply font-bold font-inria text-center text-primary border-b-secondary w-3/4 text-lg;
 }
 
+@utility h4-title {
+  @apply text-xl font-semibold tracking-tight font-inria text-primary w-3/4;
+}
+
+@utility main-button {
+  @apply px-10 py-4 text-2xl rounded-xl flex flex-row items-center gap-2
+}
+
+@utility button-primary-colors {
+  @apply bg-primary hover:bg-primary-hover text-white
+}
+
+@utility button-secondary-colors {
+  @apply bg-gray-300 hover:bg-gray-400/70 text-primary
+}
+
 /* --------------------------------------------- */
 /* ----------- UI COMPONENTS STYLING ----------- */
 /* --------------------------------------------- */
@@ -59,16 +75,32 @@
   @apply w-full h-1/3 flex flex-col justify-between items-center px-6
 }
 
+@utility double-slider-text-input {
+  @apply appearance-none block w-full text-right
+}
+
+@utility double-slider-input-icon {
+  @apply text-gray-500 mr-1
+}
+
+@utility double-slider-input-inner-container {
+  @apply w-7/12 py-2 px-2 border-2 border-gray-400 rounded-lg flex items-center justify-center
+}
+
+@utility double-slider-input-outer-container {
+  @apply flex flex-row space-x-2 items-center
+}
+
 /* ------------------------------------------- */
 /* ----------- SEARCH PAGE STYLING ----------- */
 /* ------------------------------------------- */
 
 @utility main-container {
-  @apply w-screen h-full flex items-center justify-center bg-background
+  @apply w-screen h-full flex items-center justify-center bg-background overflow-scroll
 }
 
 @utility section-container {
-  @apply bg-surface w-5/6 h-3/4 border-3 border-border rounded-xl p-8 space-y-4 flex flex-col items-center
+  @apply bg-surface w-5/6 min-h-3/4 border-3 border-border rounded-xl p-8 space-y-4 flex flex-col items-center justify-between
 }
 
 @utility section-error-message {
@@ -83,14 +115,38 @@
   @apply w-1/3 flex flex-col items-center space-y-4
 }
 
-@utility filter-type-circle {
+@utility circle-selector-empty {
   @apply w-[17px] h-[15px] border-2 border-secondary rounded-full
 }
 
-@utility filter-type-option {
-  @apply flex w-full text-left py-2 px-3 hover:bg-caput-mortuum/10
+@utility circle-selector-option {
+  @apply flex w-full text-left py-2 px-3 hover:bg-caput-mortuum/10 text-lg
 }
 
 @utility filter-slider-container {
   @apply w-2/3 flex flex-col justify-between
+}
+
+@utility navigation-buttons-container {
+  @apply flex flex-row w-2/3 justify-between
+}
+
+@utility city-section-container {
+  @apply w-full h-full flex flex-row items-center justify-center
+}
+
+@utility why-section-container {
+  @apply w-full h-full grid grid-rows-8
+}
+
+@utility reason-list-container {
+  @apply row-span-3 h-full w-2/3 justify-self-center flex flex-row justify-between
+}
+
+@utility reason-list-item {
+  @apply flex flex-row items-center pl-4
+}
+
+@utility why-description-container {
+  @apply row-span-5 w-full
 }
