@@ -1,22 +1,28 @@
 import React from "react";
+// Icons import
+import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
+import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 
 /**
  * **Header**
  * 
- * React functional component that renders the **top navigation header**  
- * of the application or search wizard interface.  
+ * React functional component that renders the **main header** section  
+ * of the BidHouse web application, including both a **contact banner**  
+ * and the **navigation header** with logo and external link.
  * 
- * The header provides a fixed visual area at the top of the layout,
- * typically used for **branding elements** (like a logo or title).  
- * In its current implementation, it displays a placeholder image
- * contained within a styled box.
+ * The header is composed of two stacked sections:
+ * 
+ * 1. **Call Us Banner** – a slim top bar with a phone icon and clickable telephone link.  
+ *    When clicked, it triggers the user's phone app (`tel:` link).
+ * 2. **Navigation Header** – the main horizontal bar containing the BidHouse logo  
+ *    and a navigation button linking to the main website.
  * 
  * ---
  * 
  * @component
  * 
  * @returns {JSX.Element}  
- * A responsive `<div>` acting as the header bar, containing a nested image container.
+ * A two-part responsive header with contact information and navigation elements.
  * 
  * ---
  * 
@@ -24,13 +30,11 @@ import React from "react";
  * ```jsx
  * import Header from "./Header";
  * 
- * export default function AppLayout() {
+ * export default function Layout() {
  *   return (
- *     <div className="flex flex-col min-h-screen">
+ *     <div className="min-h-screen flex flex-col">
  *       <Header />
- *       <main className="flex-grow">
- *          { pageContent }
- *       </main>
+ *       <main className="flex-grow">{/* page content * /}</main>
  *     </div>
  *   );
  * }
@@ -39,21 +43,55 @@ import React from "react";
  * ---
  * 
  * @usage
- * - Used as the main header component across pages or wizard views.  
- * - Can be expanded to include navigation links, titles, or dynamic elements.  
- * - The image placeholder (`src/assets/...png`) can be replaced with the project logo.
+ * - Used at the top of the BidHouse web app or dashboard pages.  
+ * - Combines static branding (logo) with a direct call-to-action (“Call Us”).  
+ * - The “Vai al sito” button opens the main public website (`https://bidhouse.it/`) in a new tab.  
+ * - Designed to maintain consistent branding across both web app and main site.
  * 
  * @accessibility
- * - The header uses semantic `<div>` containers;  
- *   to improve accessibility, consider adding an `<img alt="Logo">` attribute.  
- * - Fixed height and contrast ensure consistent visibility.
+ * - The phone link uses `tel:` protocol for accessibility and mobile compatibility.  
+ * - `rel="noopener noreferrer"` ensures security for external links.  
+ * - Texts and icons provide clear affordances for screen readers.
  */
-export default function Header () {
+export default function Header() {
     return (
-        <div className="bg-amber-600 w-full h-[125px] flex flex-row justify-between items-center p-4">
-            <div className="bg-green-500 w-[200px] h-[80px]">
-                <img src="src/assets/Screenshot 2025-10-28 at 16.10.51.png"/>
+        <div className="w-full flex flex-col">
+            {/* Call Us Banner */}
+            <div className="bg-primary place-items-center items-center p-2.5">
+                <a
+                    href="tel:+390281127665"
+                    className="flex flex-row space-x-4 text-white text-xl hover:text-secondary"
+                >
+                    <LocalPhoneIcon sx={{ fontSize: 30 }} />
+                    <h3 className="font-inria">
+                        Chiamaci +39 02 8112 7665
+                    </h3>
+                </a>
             </div>
+
+            {/* Navigation Header */}
+            <div className="w-full bg-white h-30    flex flex-row justify-between items-center px-16">
+                {/* Logo */}
+                <img
+                    src="src/assets/bidhouse_logo_black.png"
+                    className="object-cover w-40 h-25"
+                />
+
+                {/* Navigation Menu */}
+                <div>
+                    <a
+                        className="font-inria font-semibold px-6 py-3 bg-secondary hover:bg-background hover:text flex flex-row justify-center items-center gap-2"
+                        href="https://bidhouse.it/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Vai al sito
+                        <ArrowCircleRightIcon />
+                    </a>
+                </div>
+            </div>
+
+
         </div>
     );
 }

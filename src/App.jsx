@@ -6,6 +6,8 @@ import SearchPage from './pages/SearchPage'
 import Header from './components/Header'
 import MessagePage from './pages/MessagePage'
 import { CircleX } from 'lucide-react'
+import { LoadingSpinner } from './components/UiComponents'
+import ResultsPage from './pages/ResultsPage'
 
 
 function LoadingPage() {
@@ -13,7 +15,12 @@ function LoadingPage() {
     <div className='h-screen w-screen flex flex-col justify-start items-center'>
       <Header />
 
-      <>LOADING</>
+      <div className='w-full h-full flex justify-center items-center'>
+        <LoadingSpinner
+          time={65000}
+          message={"temp message temp message temp message temp message temp message temp message temp message"}
+        />
+      </div>
     </div>
   );
 }
@@ -25,22 +32,7 @@ function tempErrorOnClick(setError) {
 function App() {
   const [error, setError] = useState(null) // TODO: clean the error message sys
   const [loading, setLoading] = useState(false)
-
-  // // TODO: temp test
-  // useEffect(() => {
-  //   const mc = "red-600"
-  //   setError({
-  //     mainColor: mc,
-  //     icon: <CircleX className={`size-24 text-${mc}`}/>,
-  //     title: "Errore nella ricerca",
-  //     paragraph: "Si è verificato un errore nella ricerca, riprova più tardi o contatta il supporto",
-  //     buttonText: "Torna alla ricerca",
-  //     buttonTextColor: "white",
-  //     buttonLink: "/search",
-  //     onClickFunc: () => {setError(null)}
-  //   })
-  // }, [])
-
+  const [results, setResults] = useState(null)
 
   if (error && typeof error === 'object') {
     return (
@@ -63,15 +55,24 @@ function App() {
 
   if (loading) {
     return (
-
+      // <LoadingSpinner time={65000} message={"temp message temp message temp message temp message temp message temp message temp message"} />
       <LoadingPage />
+    );
+  }
+
+  if (results) {
+    return (
+      <div className='h-screen w-screen flex flex-col justify-start items-center'>
+        <Header />
+        <ResultsPage results={results} />
+      </div>
     );
   }
 
   return (
     <div className='h-screen w-screen flex flex-col justify-start items-center'>
       <Header />
-      <SearchPage setError={setError} />
+      <SearchPage setError={setError} setLoading={setLoading} setResults={setResults} />
     </div>
   )
 }

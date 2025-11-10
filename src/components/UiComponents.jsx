@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { Slider } from "@mui/material";
-import { Autocomplete, TextField } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import { Slider, Autocomplete, TextField, CircularProgress, Typography, Box } from "@mui/material";
+import PropTypes from 'prop-types';
 
 /**
  * **normalize**
@@ -36,6 +36,7 @@ import { Autocomplete, TextField } from "@mui/material";
 const normalize = (s = "") =>
     s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 
+// TODO: it should stay somewhere in lib/
 /**
  * **cityFilter**
  * 
@@ -294,7 +295,7 @@ export function DoubleSlider({
     value,
     onCommit = (val) => { console.log(val) },
     min = 0,
-    max = 1_000_000,
+    max = 400,
     step = 10_000
 }) {
     // extract the numbers in a stable way (avoid relying on array identity)
@@ -316,17 +317,103 @@ export function DoubleSlider({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [v0, v1]);
 
+    /**
+     * **handleChange**
+     * 
+     * Event handler used to update the **temporary slider values** (`draft`)  
+     * during user interaction within the `DoubleSlider` component.  
+     * 
+     * It is triggered whenever the user drags one or both thumbs of the slider,  
+     * and ensures that only valid array-based values are used to update state.
+     * 
+     * ---
+     * 
+     * @function handleChange
+     * 
+     * @param {Event} _  
+     * The React synthetic event automatically passed by the slider’s `onChange` handler.  
+     * It is unused in this context and therefore ignored.
+     * 
+     * @param {Array<number>} newValue  
+     * The new range array `[min, max]` emitted by the MUI `Slider` component  
+     * whenever the user moves the slider thumbs.
+     * 
+     * @returns {void}  
+     * No return value. Updates the component’s internal `draft` state via `setDraft(newValue)`.
+     * 
+     * ---
+     * 
+     * @example
+     * ```js
+     * const handleChange = (_, newValue) => {
+     *   if (Array.isArray(newValue)) setDraft(newValue);
+     * };
+     * 
+     * <Slider onChange={handleChange} value={draft} />
+     * ```
+     * 
+     * ---
+     * 
+     * @usage
+     * - Used as the `onChange` callback for the Material UI `Slider`.  
+     * - Ensures stability by checking that `newValue` is an array before updating.  
+     * - Works together with `handleCommit` to propagate updates to the parent only after release.
+     */
     const handleChange = (_, newValue) => {
         if (Array.isArray(newValue)) setDraft(newValue);
     };
 
+    /**
+     * **handleCommit**
+     * 
+     * Event handler that triggers the **final update** of the selected range values  
+     * in the `DoubleSlider` component when the user **releases the slider thumb**.  
+     * 
+     * It calls the parent’s `onCommit` callback (if provided) with the current  
+     * internal `draft` state, allowing the parent component to synchronize  
+     * its filter or controlled value state accordingly.
+     * 
+     * ---
+     * 
+     * @function handleCommit
+     * 
+     * @returns {void}  
+     * No return value. Executes the `onCommit` callback with the current draft array.  
+     * Example output: `[minValue, maxValue]`.
+     * 
+     * ---
+     * 
+     * @example
+     * ```js
+     * const handleCommit = () => {
+     *   onCommit?.(draft); // updates the parent only on release
+     * };
+     * 
+     * <Slider
+     *   value={draft}
+     *   onChange={handleChange}
+     *   onChangeCommitted={handleCommit}
+     * />
+     * ```
+     * 
+     * ---
+     * 
+     * @usage
+     * - Used as the `onChangeCommitted` handler for the Material UI `Slider`.  
+     * - Ensures that parent components (e.g., `FilterSection`) are updated **only after**  
+     *   the user finishes adjusting the range, reducing unnecessary re-renders.  
+     * - Safely calls `onCommit` only if it exists (`?.` operator).
+     */
     const handleCommit = () => {
         onCommit?.(draft); // aggiorna il parent solo al rilascio
     };
 
     return (
         <div className="w-full h-1/3 flex flex-col justify-between items-center px-6">
-            <h1 className="w-full text-caput-mortuum text-center text-lg font-bold h-[4 0px]">{title}</h1>
+            <h1
+                className="filter-heading"
+                // className="w-full text-caput-mortuum text-center text-lg font-bold h-[4 0px]"
+            >{title}</h1>
             <Slider
                 value={draft}
                 min={min}
@@ -347,12 +434,14 @@ export function DoubleSlider({
                     <div className="w-7/12 py-2 px-2 border-2 border-gray-400 rounded-lg flex items-center justify-center">
                         {Icon && <Icon className="text-gray-500 mr-1" />}
                         <input
-                            className="appearance-none block w-full"
-                            value={draft[0]}
-                            type="number"
-                            onChange={(e) =>
-                                setDraft((prev) => [Number(e.target.value), prev[1]])
-                            }
+                            className="appearance-none block w-full text-right"
+                            type="text"
+                            value={draft[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
+                            onChange={(e) => {
+                                const clean = e.target.value.replace(/\s/g, ""); // rimuove spazi
+                                const num = Number(clean) || 0;
+                                setDraft((prev) => [num, prev[1]]);
+                            }}
                         />
                     </div>
                     <label>min</label>
@@ -362,12 +451,14 @@ export function DoubleSlider({
                     <div className="w-7/12 py-2 px-2 border-2 border-gray-400 rounded-lg flex items-center justify-center">
                         {Icon && <Icon className="text-gray-500 mr-1" />}
                         <input
-                            className="appearance-none block w-full"
-                            type="number"
-                            value={draft[1]}
-                            onChange={(e) =>
-                                setDraft((prev) => [prev[0], Number(e.target.value)])
-                            }
+                            className="appearance-none block w-full text-right"
+                            type="text"
+                            value={draft[1].toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
+                            onChange={(e) => {
+                                const clean = e.target.value.replace(/\s/g, ""); // rimuove spazi
+                                const num = Number(clean) || 0;
+                                setDraft((prev) => [prev[0], num]);
+                            }}
                         />
                     </div>
                 </div>
@@ -636,4 +727,202 @@ export function ProceedButton({
         setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
         console.error("ERROR: the value of `step` is not allowed (must be 0, 1, or 2) - `step`: " + step)
     }
+}
+
+/**
+ * **LoadingSpinner**
+ * 
+ * React functional component that displays a **circular progress indicator**
+ * with optional percentage display and a customizable text message.  
+ * 
+ * It supports two operating modes:
+ * 
+ * 1. **Controlled Mode (`value`)** – when the `value` prop is provided,  
+ *    the progress percentage is externally controlled (0–100).
+ * 2. **Timed Mode (`time`)** – when `value` is `null` and `time` is specified,  
+ *    the spinner automatically fills over the given duration (in milliseconds).
+ * 
+ * ---
+ * 
+ * ### 🎛️ Size Variants
+ * The visual size and thickness of the spinner are determined by the `size` prop:
+ * 
+ * | Size | Spinner (px) | Thickness | Font Size | Label Margin |
+ * |------|---------------|------------|------------|---------------|
+ * | **0** | 56 | 4 | 12px | 0.75em |
+ * | **1** | 90 | 5 | 14px | 1em |
+ * | **2** | 120 | 6 | 18px | 1.25em |
+ * 
+ * ---
+ * 
+ * @component
+ * 
+ * @param {Object} props  
+ * Component props.
+ * 
+ * @param {string|null} [props.message=null]  
+ * Optional message displayed below the spinner.  
+ * Used to describe the loading context (e.g. *"Loading search results..."*).
+ * 
+ * @param {number|null} [props.value=null]  
+ * Controlled progress value between `0` and `100`.  
+ * When set, the spinner reflects this exact percentage and disables timed mode.
+ * 
+ * @param {number|null} [props.time=null]  
+ * Duration (in milliseconds) for automatic timed progress.  
+ * Active only when `value` is `null`. The spinner animates from 0 to 100% within this time.
+ * 
+ * @param {0|1|2} [props.size=1]  
+ * Visual size preset for the spinner.  
+ * - `0` → small  
+ * - `1` → medium (default)  
+ * - `2` → large  
+ * 
+ * @param {string} [props.color="var(--color-cinnabar)"]  
+ * Custom color for the spinner and text (CSS variable or valid color string).
+ * 
+ * @returns {JSX.Element}  
+ * A composed layout with a circular progress bar, numeric percentage indicator,  
+ * and optional descriptive message.
+ * 
+ * ---
+ * 
+ * @example
+ * ```jsx
+ * // Controlled Mode (progress externally managed)
+ * <LoadingSpinner value={75} message="Uploading file..." />
+ * 
+ * // Timed Mode (fills automatically in 3 seconds)
+ * <LoadingSpinner time={3000} message="Preparing search..." />
+ * 
+ * // Large variant with custom color
+ * <LoadingSpinner size={2} color="#E44D26" message="Please wait..." />
+ * ```
+ * 
+ * ---
+ * 
+ * @usage
+ * - Used in loading states within the search wizard or API operations.  
+ * - Ideal for representing determinate progress or timed transitions.  
+ * - Automatically clamps progress values between `0` and `100`.
+ * 
+ * @accessibility
+ * - Includes `role="status"` and `aria-live="polite"` for screen readers.  
+ * - The percentage text is visible and readable at all sizes.
+ */
+export function LoadingSpinner({
+    message = null,
+    value = null,   // progress controllato (0–100), dinamico dall'esterno
+    time = null,    // durata stimata in ms per la modalità “a tempo”
+    size = 1,       // 0=small, 1=medium (default), 2=large
+    color = "var(--color-cinnabar)" // opzionale: override colore
+}) {
+    // --- CONFIG TAGLIE ---------------------------------------------------------
+    const sizeCfg = useMemo(() => {
+        const map = {
+            0: { spinner: 56, thickness: 4, fontSize: 12, labelMt: 0.75 },
+            1: { spinner: 90, thickness: 5, fontSize: 14, labelMt: 1 },
+            2: { spinner: 120, thickness: 6, fontSize: 18, labelMt: 1.25 },
+        };
+        return map[size] ?? map[1];
+    }, [size]);
+
+    // --- STATO INTERNO PROGRESS -----------------------------------------------
+    const [progress, setProgress] = useState(0);
+
+    // Helper clamp
+    const clamp = (n, min = 0, max = 100) => Math.max(min, Math.min(max, n));
+
+    // --- MODALITÀ “VALORE CONTROLLATO” (value) --------------------------------
+    // Se value è non nullo, il componente si comporta in modo controllato:
+    // seguo i cambi esterni e ignoro time.
+    useEffect(() => {
+        if (value == null) return;
+        setProgress((prev) => {
+            // se già uguale evito un set inutile
+            const next = clamp(Number(value) || 0);
+            return prev === next ? prev : next;
+        });
+    }, [value]);
+
+    // --- MODALITÀ “A TEMPO” (time) --------------------------------------------
+    // Attiva SOLO quando value è null e time è valorizzato.
+    useEffect(() => {
+        if (value != null) return; // priorità alla modalità controllata
+        if (time == null) {
+            // TODO: handle null parameters error
+            return;
+        }
+
+        // Protezione: time valido (>0)
+        const total = Math.max(1, Number(time) || 0);
+
+        const interval = 100; // ms
+        const step = (100 * interval) / total; // % per tick
+
+        // Resetta progress quando si entra in modalità a tempo
+        setProgress(0);
+
+        const timer = setInterval(() => {
+            setProgress((old) => {
+                const next = old + step;
+                return next >= 100 ? 100 : next;
+            });
+        }, interval);
+
+        return () => clearInterval(timer);
+    }, [time, value]);
+
+    // --- RENDER ---------------------------------------------------------------
+    return (
+        <Box
+            sx={{
+                position: "relative",
+                display: "inline-flex",
+                flexDirection: "column",
+                alignItems: "center",
+            }}
+            role="status"
+            aria-label={message || "Loading"}
+            aria-live="polite"
+        >
+            <Box sx={{ position: "relative", display: "inline-flex" }}>
+                <CircularProgress
+                    variant="determinate"
+                    value={clamp(progress)}
+                    size={sizeCfg.spinner}
+                    thickness={sizeCfg.thickness}
+                    sx={{ color }}
+                />
+                <Box
+                    sx={{
+                        top: 0,
+                        left: 0,
+                        bottom: 0,
+                        right: 0,
+                        position: "absolute",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <Typography
+                        component="div"
+                        sx={{ fontSize: sizeCfg.fontSize, color }}
+                    >
+                        {`${Math.round(clamp(progress))}%`}
+                    </Typography>
+                </Box>
+            </Box>
+
+            {message && (
+                <Typography
+                    variant="body2"
+                    sx={{ mt: sizeCfg.labelMt, color: "text.secondary", textAlign: "center" }}
+                >
+                    {message}
+                </Typography>
+            )}
+        </Box>
+    );
 }

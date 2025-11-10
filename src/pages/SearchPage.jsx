@@ -9,7 +9,7 @@ import {
     DoubleSlider,
     AutocompleteSearchBar,
     MultilineTextField,
-    BackButton, 
+    BackButton,
     ProceedButton
 } from "../components/UiComponents";
 import {
@@ -99,28 +99,59 @@ const BASEFILTER = {
     "request_description": ""
 }
 
-async function tempScrape(filter, setError) {
-    // TODO: temp debug print
-    console.log("TEMP SCRAPE:")
-    console.log(filter)
+async function tempScrape(
+    filter,
+    setError = () => { console.error("[TEMPSCRAPE]: setError non è definita") },
+    setLoading = () => { console.error("[TEMPSCRAPE]: setLoading non è definita") },
+) {
+    // usiamo performance.now per misurare il tempo di esecuzione
+    const startTime = performance.now();
 
-    const res = await scrape(filter)
-    console.log("TEMP SCRAPE RESULT:")
-    console.log(res)
+    try {
+        setLoading(true)
+        // Log non invasivo per debugging locale
+        console.log("[tempScrape] payload:", filter)
 
-    // TODO: handle varius error cases 
-    setError({
-        title: "Errore nella ricerca",
-        paragraph: "Si è verificato un errore nella ricerca, riprova più tardi o contatta il supporto",
-        buttonText: "Torna alla ricerca",
-        buttonLink: "/search",
-        mainColor: "red-600",
-        onClick: () => {setError(null)}
-    })
+        const result = await scrape(filter);
+        console.log("[tempScrape] risultato:", result)
 
-    
+        setLoading(false);
+        // Prima di restituire il risultato, calcoliamo il tempo totale
+        const endTime = performance.now();
+        console.log(`[tempScrape] Tempo impiegato: ${((endTime - startTime) / 1000).toFixed(2)} secondi`);
+
+        return result
+    } catch (err) {
+        console.error("[tempScrape] errore chiamando scrape:", err)
+
+        // Normalizza messaggio utente
+        const isAbort = err?.name === "AbortError"
+        const rawMessage = typeof err?.message === "string" ? err.message : ""
+
+        let userMessage = "Si è verificato un problema imprevisto. Riprova più tardi."
+        if (isAbort) {
+            userMessage = "La richiesta ha impiegato troppo tempo e è stata interrotta. Riprova."
+        } else if (/^API\s+\d{3}/.test(rawMessage)) {
+            // Messaggi formattati da api.js (es. "API 500: ...")
+            userMessage = "Il server ha risposto con un errore. Riprova più tardi."
+        } else if (rawMessage) {
+            userMessage = rawMessage
+        }
+
+        setLoading(false)
+        setError({
+            title: "Errore nella ricerca",
+            paragraph: userMessage,
+            buttonText: "Torna alla ricerca",
+            buttonLink: "/search",
+            mainColor: "red-600",
+            onClick: () => { setError(null) }
+        })
+
+        // In caso di errore restituisce null per permettere al chiamante di gestire il flusso
+        return null
+    }
 }
-
 
 SearchSectionTitle.propTypes = {
     step: PropTypes.number.isRequired,
@@ -287,14 +318,14 @@ export function SearchSectionTitle({ step, className = "text-3xl font-semibold t
  */
 export function FilterSection({ filter, setFilter }) {
     return (
-        <div className="w-full h-full flex flex-row gap-x-4">
+        <div className="filter-section-container">
             {/* Type Subsection */}
-            <div className="w-1/3 flex flex-col items-center space-y-4">
-                <h1 className="w-full text-caput-mortuum text-center text-lg font-bold h-[40px] rounded-xl border-b-4 border-b-cinnabar">
+            <div className="filter-type-container">
+                <h1 className="h3-title h-[40px] border-b-4 rounded-xl">
                     Tipologia Immobile
                 </h1>
 
-                <ul className="">
+                <ul>
                     {SearchTypeOption.map((opt) => (
                         <li key={String(opt.value)} className="flex flex-row items-center pl-4">
                             <div
@@ -340,11 +371,11 @@ export function FilterSection({ filter, setFilter }) {
                     label={"Metratura"}
                     value={[
                         filter?.lower_mq ?? 0,
-                        filter?.higher_mq ?? 9_999
+                        filter?.higher_mq ?? 700
                     ]}
                     min={0}
-                    max={9_999}
-                    step={10}
+                    max={700}
+                    step={5}
                     onCommit={([lo, hi]) =>
                         setFilter(prev => ({ ...prev, lower_mq: lo, higher_mq: hi }))
                     }
@@ -661,25 +692,32 @@ export function WhySection({ filter, setFilter }) {
  */
 export function ErrorSection({ message }) {
     return (
-        <div className="bg-white w-5/6 h-3/4 border-3 border-gray-200 rounded-xl p-8 space-y-8 flex justify-center items-center">
-            <div className="flex flex-col h-fit items-center">
-                <CircleX className="size-24 text-red-700" />
-                <h1 className="text-3xl font-semibold tracking-tight text-red-700 mb-8">
-                    Si è verificato un errore
-                </h1>
-                <p>{message}</p>
-                {/* <ErrorSection message={message} /> */}
-                <div className="w-full h-full">
-
-                </div>
-            </div>
+        <div className="section-container justify-center">
+            <CircleX className="message-section-icon" />
+            <h1 className="section-error-message mb-8">
+                Si è verificato un errore
+            </h1>
+            <p>{message}</p>
+            {/* <ErrorSection message={message} /> */}
+            {/* <div className="w-full h-full">
+                
+            </div> */}
         </div>
     );
 }
 
 // TODO: jsdoc
-export function SectionContainer({ step = 0, setStep, itemClassName = "", filter, setFilter }) {
-    const [sectionError, setSectionError] = useState(null);
+export function SectionContainer({
+    step = 0,
+    setStep,
+    itemClassName = "",
+    filter,
+    setFilter = () => { console.log("setFilter is not defined") },
+    setError = () => { console.log("setError is not defined") },
+    setLoading = () => { console.log("setLoading is not defined") },
+    setResults = () => { console.log("setResults is not defined") }
+}) {
+    const [sectionError, setSectionError] = useState(   null);
     const [pageError, setPageError] = useState(null);//"Si è verificato un errore generico, riprova più tardi o contatta il supporto")
 
     const sectionEl = React.useMemo(() => {
@@ -695,7 +733,7 @@ export function SectionContainer({ step = 0, setStep, itemClassName = "", filter
 
 
     // TODO: JSDoc
-    const buttonOnSubmit = () => {
+    const buttonOnSubmit = async () => {
         if (step == 0) {
             setStep(step + 1)
         } else if (step == 1) {
@@ -710,7 +748,19 @@ export function SectionContainer({ step = 0, setStep, itemClassName = "", filter
             // TODO: temp debug print
             console.log("SUBMITTED FILTER (2-final):")
             console.log(filter)
-            tempScrape(filter)
+            const res = await tempScrape(filter, setError, setLoading)
+
+            // TODO: temp debug print
+            console.log("res keys: " + Object.keys(res))
+            console.log("res.ok: " + res.ok);
+            console.log("res:")
+            console.log(res)
+
+            if (res.ok) {
+                setResults(res.results)
+                // TODO: temp debug print
+                console.log("results filled:");
+            }
         } else {
             setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
             console.error("ERROR: the value of `step` is not allowed (must be 0, 1, or 2) - `step`: " + step)
@@ -782,11 +832,11 @@ export function SectionContainer({ step = 0, setStep, itemClassName = "", filter
     }
 
     return (
-        <div className="bg-white w-5/6 h-3/4 border-3 border-gray-200 rounded-xl p-8 space-y-8 flex flex-col items-center">
-            <SearchSectionTitle step={step} className="text-3xl font-semibold tracking-tight text-caput-mortuum" />
+        <div className="section-container">
+            <SearchSectionTitle step={step} className="section-title" />
             {/* <SelectSection /> */}
             {sectionEl}
-            <div className="w-full flex justify-center text-red-500 h-[50px]">
+            <div className="section-error-message">
                 {sectionError ?
                     <p className="">{sectionError}</p>
                     :
@@ -806,7 +856,7 @@ export function SectionContainer({ step = 0, setStep, itemClassName = "", filter
 }
 
 // TODO: jsdoc
-export default function SearchPage() {
+export default function SearchPage({ setError, setLoading, setResults }) {
     /** **filter state:** React state hook that stores the **current set of active search filters**
      * 
      * for the property listing interface.  
@@ -913,8 +963,17 @@ export default function SearchPage() {
     const [step, setStep] = useState(0);
 
     return (
-        <div className="w-screen h-full flex items-center justify-center bg-gray-100">
-            <SectionContainer step={step} setStep={setStep} itemClassName="text-black" filter={filter} setFilter={setFilter} />
+        <div className="main-container">
+            <SectionContainer
+                step={step}
+                setStep={setStep}
+                itemClassName="text-black"
+                filter={filter}
+                setFilter={setFilter}
+                setError={setError}
+                setLoading={setLoading}
+                setResults={setResults}
+            />
         </div>
     );
 }

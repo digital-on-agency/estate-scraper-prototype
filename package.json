@@ -12,7 +12,9 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@mui/material": "^7.3.4",
+    "@mui/icons-material": "^7.3.5",
+    "@mui/material": "^7.3.5",
+    "@mui/styled-engine-sc": "^7.3.5",
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.13.0",
     "flowbite-react": "^0.12.10",
@@ -23,6 +25,7 @@
     "react-dom": "^19.1.1",
     "react-i18next": "^16.2.1",
     "react-router-dom": "^7.9.5",
+    "styled-components": "^6.1.19",
     "tailwindcss": "^4.1.16"
   },
   "devDependencies": {
