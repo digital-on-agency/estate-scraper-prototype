@@ -71,8 +71,13 @@
 }
 
 @utility button-secondary-colors {
+  @apply bg-secondary hover:bg-secondary/70 text-black
+}
+
+@utility button-gray-colors {
   @apply bg-gray-300 hover:bg-gray-400/70 text-primary
 }
+
 
 /* --------------------------------------------- */
 /* ----------- UI COMPONENTS STYLING ----------- */
@@ -161,4 +166,44 @@
 
 @utility why-description-container {
   @apply row-span-5 w-full
+}
+
+/* -------------------------------------------- */
+/* ----------- RESULTS PAGE STYLING ----------- */
+/* -------------------------------------------- */
+
+@utility result-page-container {
+  @apply w-full h-full flex flex-col justify-start items-center p-10 space-y-8 bg-gray-100
+}
+
+@utility result-grid-container {
+  @apply w-full grid grid-cols-2 gap-6
+}
+
+@utility result-card-container {
+  @apply w-full h-full flex flex-col items-start justify-start p-6 bg-white shadow-lg rounded-xl
+}
+
+@utility result-card-title {
+  @apply text-lg font-semibold line-clamp-1 text-primary
+}
+
+@utility result-card-info-container {
+  @apply w-full flex flex-row justify-between px-6 pt-3 pb-5 text-gray-500
+}
+
+@utility result-card-single-info {
+  @apply flex flex-row gap-2
+}
+
+@utility result-info-icon {
+  @apply text-primary
+}
+
+@utility result-description {
+  @apply line-clamp-5 text-gray-600
+}
+
+@utility result-button {
+  @apply w-full py-3 text-center bg-secondary hover:bg-secondary/70 text-black font-bold tracking-wider mt-5 rounded-md font-inria
 }

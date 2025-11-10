@@ -518,7 +518,7 @@ export function MultilineTextField({
 export function BackButton({
     step,
     onClickFunction,
-    itemClassName = "main-button button-secondary-colors",
+    itemClassName = "main-button button-gray-colors",
     setError = (msg) => { console.error("Error: " + msg) }
 }) {
     if (step == 0) {

@@ -60,14 +60,14 @@ function App() {
     );
   }
 
-  if (results) {
+  // if (results) {
     return (
       <div className='h-screen w-screen flex flex-col justify-start items-center'>
         <Header />
         <ResultsPage results={results} />
       </div>
     );
-  }
+  // }
 
   return (
     <div className='h-screen w-screen flex flex-col justify-start items-center'>
