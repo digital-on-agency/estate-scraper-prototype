@@ -329,15 +329,15 @@ export function FilterSection({ filter, setFilter }) {
                     {SearchTypeOption.map((opt) => (
                         <li key={String(opt.value)} className="flex flex-row items-center pl-4">
                             <div
-                                className={`w-[17px] h-[15px] border-2 border-cinnabar rounded-full ${filter?.type == opt.value ? 'bg-cinnabar' : ''}`}
+                                className={`filter-type-circle ${filter?.type == opt.value ? 'bg-secondary' : ''}`}
                             />
                             <button
                                 type="button"
                                 onClick={() =>
                                     setFilter((prev) => ({ ...prev, type: opt.value }))
                                 }
-                                className={`w-full text-left text-md py-2 px-3 hover:bg-caput-mortuum/10 ${filter?.type === opt.value
-                                    ? "font-bold"
+                                className={`filter-type-option ${filter?.type === opt.value
+                                    ? "font-bold text-primary"
                                     : ""
                                     }`}
                             >
@@ -345,9 +345,22 @@ export function FilterSection({ filter, setFilter }) {
                             </button>
                         </li>
                     ))}
+                    {/* TODO: this solution is bad: below there is a "tutte le tipologie" transparent option to avoid change width when "tutte le tipologie" is selected and deselected */}
+                    <li key="atemp" className="flex flex-row items-center pl-4">
+                        <div
+                            className={`filter-type-circle border-transparent`}
+                        />
+                        <span
+                            onClick={() => {}}
+                            disabled
+                            className={"flex w-full text-left py-2 px-3 font-bold text-transparent"}
+                        >
+                            Tutte le tipologie
+                        </span>
+                    </li>
                 </ul>
             </div>
-            <div className="w-2/3 flex flex-col justify-between">
+            <div className="filter-slider-container">
                 {/* Price Subsection */}
                 <DoubleSlider
                     title={"Prezzo"}
@@ -717,7 +730,7 @@ export function SectionContainer({
     setLoading = () => { console.log("setLoading is not defined") },
     setResults = () => { console.log("setResults is not defined") }
 }) {
-    const [sectionError, setSectionError] = useState(   null);
+    const [sectionError, setSectionError] = useState(null);
     const [pageError, setPageError] = useState(null);//"Si è verificato un errore generico, riprova più tardi o contatta il supporto")
 
     const sectionEl = React.useMemo(() => {
