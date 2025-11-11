@@ -207,3 +207,15 @@
 @utility result-button {
   @apply w-full py-3 text-center bg-secondary hover:bg-secondary/70 text-black font-bold tracking-wider mt-5 rounded-md font-inria
 }
+
+/* -------------------------------------------- */
+/* ----------- LOADING PAGE STYLING ----------- */
+/* -------------------------------------------- */
+
+@utility loading-page-container {
+  @apply h-screen w-screen flex flex-col justify-start items-center bg-background
+}
+
+@utility loading-spinner-section {
+  @apply w-4/5 h-3/4 flex justify-center items-center rounded-xl border-2 border-border bg-surface space-y-8
+}

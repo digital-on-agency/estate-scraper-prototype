@@ -688,7 +688,7 @@ export function CitySection({ filter, setFilter }) {
  * - Each option can be selected via both button click and keyboard focus.  
  * - The multiline input includes a descriptive label and placeholder for clarity.
  */
-export function WhySection({ filter, setFilter }) {
+export function WhySection({ filter, setFilter, selectorsError, setSelectorsError }) {
     const [category, setCategory] = useState("");
     const [item, setItem] = useState("")
 
@@ -766,7 +766,10 @@ export function WhySection({ filter, setFilter }) {
                         ...prev,
                         why: `${itemValueToName(event.target.value)}`, // Modifica solo il campo 'why'
                     }));
+
+                    setSelectorsError(false)
                 }}
+                error={selectorsError}
             />
 
             {/* little desciption (optional) */}
@@ -785,7 +788,6 @@ export function WhySection({ filter, setFilter }) {
         </div>
     );
 }
-
 
 /**
  * **SectionContainer**
@@ -882,12 +884,13 @@ export function SectionContainer({
     setResults = () => { console.log("setResults is not defined") }
 }) {
     const [sectionError, setSectionError] = useState(null);
+    const [selectorsError, setSelectorsError] = useState(false)
 
     const sectionEl = React.useMemo(() => {
         switch (step) {
             case 0: return <FilterSection filter={filter} setFilter={setFilter} />;
             case 1: return <CitySection filter={filter} setFilter={setFilter} />;
-            case 2: return <WhySection filter={filter} setFilter={setFilter} />;
+            case 2: return <WhySection filter={filter} setFilter={setFilter} selectorsError={selectorsError} setSelectorsError={setSelectorsError} />;
             default:
                 console.error("[Wizard] Invalid step:", step);
                 return <p className="text-red-600">Errore tecnico: step non valido.</p>;
@@ -964,25 +967,31 @@ export function SectionContainer({
                 setStep(step + 1)
             }
         } else if (step == 2) {     // Last step (why), send request to the scraper via api (Render.com)
-            try {
-                // TODO: temp debug print
-                console.log("filter sended in req:");
-                console.log(filter);
-                const res = await tempScrape(filter, setError, setLoading)
+            // check if user select in the double selector
+            if (filter.why == null || filter.why == "") {
+                setSectionError("Inserire il motivo della ricerca")
+                setSelectorsError(true)
+            } else {
+                try {
+                    // TODO: temp debug print
+                    console.log("filter sended in req:");
+                    console.log(filter);
+                    const res = await tempScrape(filter, setError, setLoading)
 
-                // TODO: temp debug print
-                console.log("request result:");
-                console.log(res);
+                    // TODO: temp debug print
+                    console.log("request result:");
+                    console.log(res);
 
-                if (res.ok) {
-                    setResults(res.results)
-                } else {
+                    if (res.ok) {
+                        setResults(res.results)
+                    } else {
+                        setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
+                        console.error("ERROR: res.ok != true: " + res)
+                    }
+                } catch (error) {
                     setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
-                    console.error("ERROR: res.ok != true: " + res)
+                    console.error("ERROR: error catched sending request to the scraper: " + error)
                 }
-            } catch (error) {
-                setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");
-                console.error("ERROR: error catched sending request to the scraper: " + error)
             }
         } else {
             setError("Si è verificato un errore generico, riprova più tardi o contatta il supporto");

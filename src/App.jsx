@@ -12,12 +12,12 @@ import ResultsPage from './pages/ResultsPage'
 
 function LoadingPage() {
   return (
-    <div className='h-screen w-screen flex flex-col justify-start items-center'>
+    <div className='loading-page-container'>
       <Header />
 
       <div className='w-full h-full flex justify-center items-center'>
         <LoadingSpinner
-          time={65000}
+          time={95000}
           message={"temp message temp message temp message temp message temp message temp message temp message"}
         />
       </div>
@@ -55,7 +55,6 @@ function App() {
 
   if (loading) {
     return (
-      // <LoadingSpinner time={65000} message={"temp message temp message temp message temp message temp message temp message temp message"} />
       <LoadingPage />
     );
   }

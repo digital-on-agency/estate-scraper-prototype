@@ -792,6 +792,7 @@ export function LoadingSpinner({
     // --- RENDER ---------------------------------------------------------------
     return (
         <Box
+            className="loading-spinner-section"
             sx={{
                 position: "relative",
                 display: "inline-flex",
@@ -847,19 +848,24 @@ export function LoadingSpinner({
 export function DoubleSelector({
     containerClassName = "double-selector-container",
     categoryValue = "",
-    categoryOnChange = () => {console.log("[ERROR] category onChange is not defined")},
+    categoryOnChange = () => { console.log("[ERROR] category onChange is not defined") },
     categoryLabel = "Category Label",
     categoryItems = [],
     itemValue = "",
-    itemOnChange = () => {console.log("[ERROR] category onChange is not defined")},
+    itemOnChange = () => { console.log("[ERROR] category onChange is not defined") },
     itemLabel = "Category Label",
-    itemItems = []
+    itemItems = [],
+    error = false
 }) {
 
     return (
         <div className={containerClassName}>
-            <Box sx={{ minWidth: 120 }} className="w-full flex flex-row gap-16">
-                <FormControl fullWidth>
+            <Box sx={{ minWidth: 120 }} className="w-full flex flex-row gap-16 justify-between">
+                <FormControl
+                    fullWidth
+                    className="basis-5/12 shrink-0 min-w-0"
+                    sx={error ? { "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "var(--color-error) !important" } } } : {}}
+                >
                     <InputLabel id="demo-simple-select-label">{categoryLabel}</InputLabel>
                     <Select
                         labelId="demo-simple-select-label"
@@ -873,9 +879,12 @@ export function DoubleSelector({
                         ))}
                     </Select>
                 </FormControl>
-            {/* </Box>
-            <Box sx={{ minWidth: 120 }}> */}
-                <FormControl fullWidth style={{ visibility: categoryValue ? "visible" : "hidden" }}>
+                <FormControl
+                    fullWidth
+                    className="basis-5/12 shrink-0 min-w-0"
+                    style={{ visibility: categoryValue ? "visible" : "hidden" }}
+                    sx={error ? { "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "var(--color-error) !important" } } } : {}}
+                >
                     <InputLabel id="demo-simple-select-label">{itemLabel}</InputLabel>
                     <Select
                         labelId="demo-simple-select-label"
