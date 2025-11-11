@@ -2,6 +2,8 @@ import React from "react";
 // Icons import
 import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
+// logo import
+import logo from "src/assets/bidhouse_logo_black.png"
 
 /**
  * **Header**
@@ -73,7 +75,7 @@ export default function Header() {
             <div className="w-full bg-white h-30    flex flex-row justify-between items-center px-16">
                 {/* Logo */}
                 <img
-                    src="src/assets/bidhouse_logo_black.png"
+                    src={logo}
                     className="object-cover w-40 h-25"
                 />
 
