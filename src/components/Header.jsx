@@ -3,7 +3,7 @@ import React from "react";
 import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 // logo import
-import logo from "../assets/bidhouse_logo_black.pn"
+import logo from "../assets/bidhouse_logo_black.png"
 
 /**
  * **Header**
